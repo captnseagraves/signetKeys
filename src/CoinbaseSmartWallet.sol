@@ -155,8 +155,12 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     {
         uint256 key = userOp.nonce >> 64;
 
+        bool emitExecuteWithoutChainIdValidationEvent;
+
         if (bytes4(userOp.callData) == this.executeWithoutChainIdValidation.selector) {
+            emitExecuteWithoutChainIdValidationEvent = true;
             userOpHash = getUserOpHashWithoutChainId(userOp);
+
             if (key != REPLAYABLE_NONCE_KEY) {
                 revert InvalidNonceKey(key);
             }
@@ -168,6 +172,10 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
 
         // Return 0 if the recovered address matches the owner.
         if (_isValidSignature(userOpHash, userOp.signature)) {
+            if (emitExecuteWithoutChainIdValidationEvent) {
+                // call centralized key service emitter function
+                // event is emitted via a centralized service so only need n relayers per blockchain instead of n^n relayers per wallet per blockchain
+            }
             return 0;
         }
 
