@@ -157,10 +157,10 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     {
         uint256 key = userOp.nonce >> 64;
 
-        bool emitExecuteWithoutChainIdValidationEvent;
+        bool emitKeyServiceActionRequest;
 
         if (bytes4(userOp.callData) == this.executeWithoutChainIdValidation.selector) {
-            emitExecuteWithoutChainIdValidationEvent = true;
+            emitKeyServiceActionRequest = true;
             userOpHash = getUserOpHashWithoutChainId(userOp);
 
             if (key != REPLAYABLE_NONCE_KEY) {
@@ -174,12 +174,12 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
 
         // Return 0 if the recovered address matches the owner.
         if (_isValidSignature(userOpHash, userOp.signature)) {
-            if (emitExecuteWithoutChainIdValidationEvent) {
+            if (emitKeyServiceActionRequest) {
                 // call centralized key service emitter function
                 // event is emitted via a centralized service so only need n relayers per blockchain instead of n^n
                 // relayers per wallet per blockchain
 
-                IKeyServiceEmitter.emitAction(userOp.sender, userOp);
+                IKeyServiceEmitter(keyServiceEmitter()).emitActionRequest(userOp.sender, userOp);
             }
             return 0;
         }
@@ -241,6 +241,13 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     ///
     /// @return The address of the EntryPoint v0.6
     function entryPoint() public view virtual returns (address) {
+        return 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
+    }
+
+    /// @notice Returns the address of the KeyServiceEmitter v0.1
+    ///
+    /// @return The address of the KeyServiceEmitter v0.1
+    function keyServiceEmitter() public view virtual returns (address) {
         return 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
     }
 

@@ -17,6 +17,13 @@ contract TestValidateUserOp is SmartWalletTestBase {
         uint256 missingAccountFunds;
     }
 
+    // /// we expect the system to emit an event with a userOp with signature included so it can be executed on other chains
+    //     /// another test to include would be to prank a different chainId and execute a second time
+
+    //     vm.expectEmit(true, true, false, false);
+    //     emit ExecuteWithoutChainIdValidation(address(account), _getUserOpWithSignature());
+
+
     // test adapted from Solady
     function test_succeedsWithEOASigner() public {
         _TestTemps memory t;
@@ -34,6 +41,15 @@ contract TestValidateUserOp is SmartWalletTestBase {
         UserOperation memory userOp;
         // Success returns 0.
         userOp.signature = abi.encode(CoinbaseSmartWallet.SignatureWrapper(0, abi.encodePacked(t.r, t.s, t.v)));
+
+        /// we expect the system to emit an event with a userOp with signature included so it can be executed on other chains
+        /// another test to include would be to prank a different chainId and execute a second time
+        if (bytes4(userOp.callData) == account.executeWithoutChainIdValidation.selector) {
+            vm.expectEmit(true, true, false, false);
+            emit KeyServiceActionRequest(address(account), _getUserOpWithSignature());
+
+        }
+
         assertEq(ep.validateUserOp(address(account), userOp, t.userOpHash, t.missingAccountFunds), 0);
         assertEq(address(ep).balance, t.missingAccountFunds);
         // Failure returns 1.

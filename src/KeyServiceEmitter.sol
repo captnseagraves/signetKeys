@@ -37,3 +37,9 @@ contract KeyServiceEmitter {
 
 // paymasters are assumed to be funded by the wallet UI provider
 // otherwise we need to find a way for the canon chain to pay the gas of all external chains
+
+// this contract should probably be ownable and upgradable
+// another version of this service could:
+// 1. take a subscription from wallet providers and charge a $1/month per wallet fee, and a small fee on each txn for gas
+
+// The real structure is to process any transaction given a chainId and charge a gasFee
