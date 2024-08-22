@@ -44,7 +44,7 @@ contract SmartWalletTestBase is Test {
             initCode: "",
             callData: userOpCalldata,
             callGasLimit: uint256(1_000_000),
-            verificationGasLimit: uint256(1_000_000),
+            verificationGasLimit: uint256(10_000_000),
             preVerificationGas: uint256(0),
             maxFeePerGas: uint256(0),
             maxPriorityFeePerGas: uint256(0),

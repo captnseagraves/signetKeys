@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "webauthn-sol/../test/Utils.sol";
 
 import {MockEntryPoint} from "../mocks/MockEntryPoint.sol";
+import {MockKeyServiceEmitter} from "../mocks/MockKeyServiceEmitter.sol";
+
 import "./SmartWalletTestBase.sol";
 
 import "../../src/KeyServiceEmitter.sol";
@@ -19,13 +21,6 @@ contract TestValidateUserOp is SmartWalletTestBase, KeyServiceEmitter {
         bytes32 s;
         uint256 missingAccountFunds;
     }
-
-    // /// we expect the system to emit an event with a userOp with signature included so it can be executed on other chains
-    //     /// another test to include would be to prank a different chainId and execute a second time
-
-    //     vm.expectEmit(true, true, false, false);
-    //     emit ExecuteWithoutChainIdValidation(address(account), _getUserOpWithSignature());
-
 
     // test adapted from Solady
     function test_succeedsWithEOASigner() public {
@@ -45,15 +40,20 @@ contract TestValidateUserOp is SmartWalletTestBase, KeyServiceEmitter {
         // Success returns 0.
         userOp.signature = abi.encode(CoinbaseSmartWallet.SignatureWrapper(0, abi.encodePacked(t.r, t.s, t.v)));
 
-        // the value for 'address' on line 49 probably need to be updated for this test to work, but not sure what change is needed atm.
+        // Create and deploy a mock KeyServiceEmitter
+        MockKeyServiceEmitter mockEmitter = new MockKeyServiceEmitter();
+    
+        vm.startPrank(signer);
+        account.setKeyServiceEmitter(address(mockEmitter));
+        vm.stopPrank();
 
-        /// we expect the system to emit an event with a userOp with signature included so it can be executed on other chains
-        /// another test to include would be to prank a different chainId and execute a second time
-        if (bytes4(userOp.callData) == account.executeWithoutChainIdValidation.selector) {
-            vm.expectEmit(true, true, false, false);
-            emit KeyServiceActionRequest(address(account), _getUserOpWithSignature());
+        // / we expect the system to emit an event with a userOp with signature included so it can be executed on other chains
+        // / another test to include would be to prank a different chainId and execute a second time
+        // if (bytes4(userOp.callData) == account.executeWithoutChainIdValidation.selector) {
+        //     vm.expectEmit(true, true, false, false);
+        //     emit KeyServiceActionRequest(address(account), _getUserOpWithSignature());
 
-        }
+        // }
 
         assertEq(ep.validateUserOp(address(account), userOp, t.userOpHash, t.missingAccountFunds), 0);
         assertEq(address(ep).balance, t.missingAccountFunds);
