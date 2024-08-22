@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import "./SmartWalletTestBase.sol";
 
-import "../../src/IKeyServiceEmitter.sol";
-
 contract TestExecuteWithoutChainIdValidation is SmartWalletTestBase {
     bytes[] calls;
 

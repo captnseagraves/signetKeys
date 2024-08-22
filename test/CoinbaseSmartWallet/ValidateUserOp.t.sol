@@ -6,7 +6,10 @@ import "webauthn-sol/../test/Utils.sol";
 import {MockEntryPoint} from "../mocks/MockEntryPoint.sol";
 import "./SmartWalletTestBase.sol";
 
-contract TestValidateUserOp is SmartWalletTestBase {
+import "../../src/KeyServiceEmitter.sol";
+
+
+contract TestValidateUserOp is SmartWalletTestBase, KeyServiceEmitter {
     struct _TestTemps {
         bytes32 userOpHash;
         address signer;
@@ -41,6 +44,8 @@ contract TestValidateUserOp is SmartWalletTestBase {
         UserOperation memory userOp;
         // Success returns 0.
         userOp.signature = abi.encode(CoinbaseSmartWallet.SignatureWrapper(0, abi.encodePacked(t.r, t.s, t.v)));
+
+        // the value for 'address' on line 49 probably need to be updated for this test to work, but not sure what change is needed atm.
 
         /// we expect the system to emit an event with a userOp with signature included so it can be executed on other chains
         /// another test to include would be to prank a different chainId and execute a second time

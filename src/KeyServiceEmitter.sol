@@ -3,21 +3,19 @@ pragma solidity 0.8.23;
 
 import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 
-contract KeyServiceEmitter {
+import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
+
+
+contract KeyServiceEmitter is IKeyServiceEmitter {
     /// the purpose of this contract is to be deployed via create2
     /// and create a single contract for relayers to listen to for events
 
     /// EVENTS
 
-    // userOp will be updated on each chain with paymaster data so we do not include missingAccountFunds in event
-    event ExecuteWithoutChainIdValidation(address indexed sender, UserOperation userOp);
-
-    /// Errors
-
     /// FUNCTIONS
 
-    function emitAction(address sender, UserOperation userOp) external returns (bool success) {
-        emit ExecuteWithoutChainIdValidation(sender, userOp);
+    function emitActionRequest(address sender, UserOperation calldata userOp) external {
+        emit KeyServiceActionRequest(sender, userOp);
     }
 }
 

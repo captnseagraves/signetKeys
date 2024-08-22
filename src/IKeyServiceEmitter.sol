@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
+import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
+
 interface IKeyServiceEmitter {
 
  /// EVENTS
 
 // userOp will be updated on each chain with paymaster data so we do not include missingAccountFunds in event
-event ExecuteWithoutChainIdValidation(address indexed sender, UserOperation userOp);
+event KeyServiceActionRequest(address indexed sender, UserOperation userOp);
 
-function emitAction(address sender, UserOperation userOp) external returns (bool success);
+function emitActionRequest(address sender, UserOperation calldata userOp) external;
 }
+
