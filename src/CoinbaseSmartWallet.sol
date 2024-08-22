@@ -12,6 +12,8 @@ import {WebAuthn} from "webauthn-sol/WebAuthn.sol";
 import {ERC1271} from "./ERC1271.sol";
 import {MultiOwnable} from "./MultiOwnable.sol";
 
+import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
+
 /// @title Coinbase Smart Wallet
 ///
 /// @notice ERC-4337-compatible smart account, based on Solady's ERC4337 account implementation
@@ -174,7 +176,10 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
         if (_isValidSignature(userOpHash, userOp.signature)) {
             if (emitExecuteWithoutChainIdValidationEvent) {
                 // call centralized key service emitter function
-                // event is emitted via a centralized service so only need n relayers per blockchain instead of n^n relayers per wallet per blockchain
+                // event is emitted via a centralized service so only need n relayers per blockchain instead of n^n
+                // relayers per wallet per blockchain
+
+                IKeyServiceEmitter.emitAction(userOp.sender, userOp);
             }
             return 0;
         }
