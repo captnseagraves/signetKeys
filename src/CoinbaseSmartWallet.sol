@@ -14,6 +14,8 @@ import {MultiOwnable} from "./MultiOwnable.sol";
 
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 
+import {console} from "forge-std/console.sol";
+
 /// @title Coinbase Smart Wallet
 ///
 /// @notice ERC-4337-compatible smart account, based on Solady's ERC4337 account implementation
@@ -21,7 +23,13 @@ import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 ///
 /// @author Coinbase (https://github.com/coinbase/smart-wallet)
 /// @author Solady (https://github.com/vectorized/solady/blob/main/src/accounts/ERC4337.sol)
-contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable, Receiver {
+contract CoinbaseSmartWallet is
+    ERC1271,
+    IAccount,
+    MultiOwnable,
+    UUPSUpgradeable,
+    Receiver
+{
     /// @notice A wrapper struct used for signature validation so that callers
     ///         can identify the owner that signed.
     struct SignatureWrapper {
@@ -52,12 +60,9 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     /// @dev Helps enforce sequential sequencing of replayable transactions.
     uint256 public constant REPLAYABLE_NONCE_KEY = 8453;
 
-
     /// TODO comments and ensure variable is kosher with upgradeable pattern
 
-
     address private _keyServiceEmitter;
-
 
     /// @notice Thrown when `initialize` is called but the account already has had at least one owner.
     error Initialized();
@@ -109,7 +114,17 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
         assembly ("memory-safe") {
             if missingAccountFunds {
                 // Ignore failure (it's EntryPoint's job to verify, not the account's).
-                pop(call(gas(), caller(), missingAccountFunds, codesize(), 0x00, codesize(), 0x00))
+                pop(
+                    call(
+                        gas(),
+                        caller(),
+                        missingAccountFunds,
+                        codesize(),
+                        0x00,
+                        codesize(),
+                        0x00
+                    )
+                )
             }
         }
     }
@@ -155,7 +170,11 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     /// @return validationData The encoded `ValidationData` structure:
     ///                        `(uint256(validAfter) << (160 + 48)) | (uint256(validUntil) << 160) | (success ? 0 : 1)`
     ///                        where `validUntil` is 0 (indefinite) and `validAfter` is 0.
-    function validateUserOp(UserOperation calldata userOp, bytes32 userOpHash, uint256 missingAccountFunds)
+    function validateUserOp(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        uint256 missingAccountFunds
+    )
         external
         virtual
         onlyEntryPoint
@@ -166,7 +185,10 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
 
         bool emitKeyServiceActionRequest;
 
-        if (bytes4(userOp.callData) == this.executeWithoutChainIdValidation.selector) {
+        if (
+            bytes4(userOp.callData) ==
+            this.executeWithoutChainIdValidation.selector
+        ) {
             emitKeyServiceActionRequest = true;
             userOpHash = getUserOpHashWithoutChainId(userOp);
 
@@ -186,7 +208,12 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
                 // event is emitted via a centralized service so only need n relayers per blockchain instead of n^n
                 // relayers per wallet per blockchain
 
-                IKeyServiceEmitter(keyServiceEmitter()).emitActionRequest(userOp.sender, userOp);
+                console.log("here 1");
+                IKeyServiceEmitter(keyServiceEmitter()).emitActionRequest(
+                    userOp.sender,
+                    userOp
+                );
+                console.log("here 2");
             }
             return 0;
         }
@@ -205,7 +232,9 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     ///      useful for syncing owner changes.
     ///
     /// @param calls An array of calldata to use for separate self calls.
-    function executeWithoutChainIdValidation(bytes[] calldata calls) external payable virtual onlyEntryPoint {
+    function executeWithoutChainIdValidation(
+        bytes[] calldata calls
+    ) external payable virtual onlyEntryPoint {
         for (uint256 i; i < calls.length; i++) {
             bytes calldata call = calls[i];
             bytes4 selector = bytes4(call);
@@ -224,12 +253,11 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     /// @param target The address to call.
     /// @param value  The value to send with the call.
     /// @param data   The data of the call.
-    function execute(address target, uint256 value, bytes calldata data)
-        external
-        payable
-        virtual
-        onlyEntryPointOrOwner
-    {
+    function execute(
+        address target,
+        uint256 value,
+        bytes calldata data
+    ) external payable virtual onlyEntryPointOrOwner {
         _call(target, value, data);
     }
 
@@ -238,7 +266,9 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     /// @dev Can only be called by the Entrypoint or an owner of this account (including itself).
     ///
     /// @param calls The list of `Call`s to execute.
-    function executeBatch(Call[] calldata calls) external payable virtual onlyEntryPointOrOwner {
+    function executeBatch(
+        Call[] calldata calls
+    ) external payable virtual onlyEntryPointOrOwner {
         for (uint256 i; i < calls.length; i++) {
             _call(calls[i].target, calls[i].value, calls[i].data);
         }
@@ -252,8 +282,8 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     }
 
     function setKeyServiceEmitter(address newEmitter) external onlyOwner {
-    _keyServiceEmitter = newEmitter;
-}
+        _keyServiceEmitter = newEmitter;
+    }
 
     /// @notice Returns the address of the KeyServiceEmitter v0.1
     ///
@@ -270,8 +300,11 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     /// @param userOp The `UserOperation` to compute the hash for.
     ///
     /// @return The `UserOperation` hash, which does not depend on chain ID.
-    function getUserOpHashWithoutChainId(UserOperation calldata userOp) public view virtual returns (bytes32) {
-        return keccak256(abi.encode(UserOperationLib.hash(userOp), entryPoint()));
+    function getUserOpHashWithoutChainId(
+        UserOperation calldata userOp
+    ) public view virtual returns (bytes32) {
+        return
+            keccak256(abi.encode(UserOperationLib.hash(userOp), entryPoint()));
     }
 
     /// @notice Returns the implementation of the ERC1967 proxy.
@@ -288,13 +321,15 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     /// @param functionSelector The function selector to check.
     ////
     /// @return `true` is the function selector is allowed to skip the chain ID validation, else `false`.
-    function canSkipChainIdValidation(bytes4 functionSelector) public pure returns (bool) {
+    function canSkipChainIdValidation(
+        bytes4 functionSelector
+    ) public pure returns (bool) {
         if (
-            functionSelector == MultiOwnable.addOwnerPublicKey.selector
-                || functionSelector == MultiOwnable.addOwnerAddress.selector
-                || functionSelector == MultiOwnable.removeOwnerAtIndex.selector
-                || functionSelector == MultiOwnable.removeLastOwner.selector
-                || functionSelector == UUPSUpgradeable.upgradeToAndCall.selector
+            functionSelector == MultiOwnable.addOwnerPublicKey.selector ||
+            functionSelector == MultiOwnable.addOwnerAddress.selector ||
+            functionSelector == MultiOwnable.removeOwnerAtIndex.selector ||
+            functionSelector == MultiOwnable.removeLastOwner.selector ||
+            functionSelector == UUPSUpgradeable.upgradeToAndCall.selector
         ) {
             return true;
         }
@@ -325,8 +360,14 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     /// @dev Reverts if owner at `ownerIndex` is not compatible with `signature` format.
     ///
     /// @param signature ABI encoded `SignatureWrapper`.
-    function _isValidSignature(bytes32 hash, bytes calldata signature) internal view virtual override returns (bool) {
-        SignatureWrapper memory sigWrapper = abi.decode(signature, (SignatureWrapper));
+    function _isValidSignature(
+        bytes32 hash,
+        bytes calldata signature
+    ) internal view virtual override returns (bool) {
+        SignatureWrapper memory sigWrapper = abi.decode(
+            signature,
+            (SignatureWrapper)
+        );
         bytes memory ownerBytes = ownerAtIndex(sigWrapper.ownerIndex);
 
         if (ownerBytes.length == 32) {
@@ -341,15 +382,30 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
                 owner := mload(add(ownerBytes, 32))
             }
 
-            return SignatureCheckerLib.isValidSignatureNow(owner, hash, sigWrapper.signatureData);
+            return
+                SignatureCheckerLib.isValidSignatureNow(
+                    owner,
+                    hash,
+                    sigWrapper.signatureData
+                );
         }
 
         if (ownerBytes.length == 64) {
             (uint256 x, uint256 y) = abi.decode(ownerBytes, (uint256, uint256));
 
-            WebAuthn.WebAuthnAuth memory auth = abi.decode(sigWrapper.signatureData, (WebAuthn.WebAuthnAuth));
+            WebAuthn.WebAuthnAuth memory auth = abi.decode(
+                sigWrapper.signatureData,
+                (WebAuthn.WebAuthnAuth)
+            );
 
-            return WebAuthn.verify({challenge: abi.encode(hash), requireUV: false, webAuthnAuth: auth, x: x, y: y});
+            return
+                WebAuthn.verify({
+                    challenge: abi.encode(hash),
+                    requireUV: false,
+                    webAuthnAuth: auth,
+                    x: x,
+                    y: y
+                });
         }
 
         revert InvalidOwnerBytesLength(ownerBytes);
@@ -359,10 +415,17 @@ contract CoinbaseSmartWallet is ERC1271, IAccount, MultiOwnable, UUPSUpgradeable
     ///
     /// @dev Authorization logic is only based on the `msg.sender` being an owner of this account,
     ///      or `address(this)`.
-    function _authorizeUpgrade(address) internal view virtual override(UUPSUpgradeable) onlyOwner {}
+    function _authorizeUpgrade(
+        address
+    ) internal view virtual override(UUPSUpgradeable) onlyOwner {}
 
     /// @inheritdoc ERC1271
-    function _domainNameAndVersion() internal pure override(ERC1271) returns (string memory, string memory) {
+    function _domainNameAndVersion()
+        internal
+        pure
+        override(ERC1271)
+        returns (string memory, string memory)
+    {
         return ("Coinbase Smart Wallet", "1");
     }
 }

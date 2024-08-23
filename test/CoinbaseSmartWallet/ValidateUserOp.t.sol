@@ -4,14 +4,10 @@ pragma solidity ^0.8.0;
 import "webauthn-sol/../test/Utils.sol";
 
 import {MockEntryPoint} from "../mocks/MockEntryPoint.sol";
-import {MockKeyServiceEmitter} from "../mocks/MockKeyServiceEmitter.sol";
 
 import "./SmartWalletTestBase.sol";
 
-import "../../src/KeyServiceEmitter.sol";
-
-
-contract TestValidateUserOp is SmartWalletTestBase, KeyServiceEmitter {
+contract TestValidateUserOp is SmartWalletTestBase {
     struct _TestTemps {
         bytes32 userOpHash;
         address signer;
@@ -38,29 +34,39 @@ contract TestValidateUserOp is SmartWalletTestBase, KeyServiceEmitter {
 
         UserOperation memory userOp;
         // Success returns 0.
-        userOp.signature = abi.encode(CoinbaseSmartWallet.SignatureWrapper(0, abi.encodePacked(t.r, t.s, t.v)));
+        userOp.signature = abi.encode(
+            CoinbaseSmartWallet.SignatureWrapper(
+                0,
+                abi.encodePacked(t.r, t.s, t.v)
+            )
+        );
 
-        // Create and deploy a mock KeyServiceEmitter
-        MockKeyServiceEmitter mockEmitter = new MockKeyServiceEmitter();
-    
-        vm.startPrank(signer);
-        account.setKeyServiceEmitter(address(mockEmitter));
-        vm.stopPrank();
-
-        // / we expect the system to emit an event with a userOp with signature included so it can be executed on other chains
-        // / another test to include would be to prank a different chainId and execute a second time
-        // if (bytes4(userOp.callData) == account.executeWithoutChainIdValidation.selector) {
-        //     vm.expectEmit(true, true, false, false);
-        //     emit KeyServiceActionRequest(address(account), _getUserOpWithSignature());
-
-        // }
-
-        assertEq(ep.validateUserOp(address(account), userOp, t.userOpHash, t.missingAccountFunds), 0);
+        assertEq(
+            ep.validateUserOp(
+                address(account),
+                userOp,
+                t.userOpHash,
+                t.missingAccountFunds
+            ),
+            0
+        );
         assertEq(address(ep).balance, t.missingAccountFunds);
         // Failure returns 1.
-        userOp.signature =
-            abi.encode(CoinbaseSmartWallet.SignatureWrapper(0, abi.encodePacked(t.r, bytes32(uint256(t.s) ^ 1), t.v)));
-        assertEq(ep.validateUserOp(address(account), userOp, t.userOpHash, t.missingAccountFunds), 1);
+        userOp.signature = abi.encode(
+            CoinbaseSmartWallet.SignatureWrapper(
+                0,
+                abi.encodePacked(t.r, bytes32(uint256(t.s) ^ 1), t.v)
+            )
+        );
+        assertEq(
+            ep.validateUserOp(
+                address(account),
+                userOp,
+                t.userOpHash,
+                t.missingAccountFunds
+            ),
+            1
+        );
         assertEq(address(ep).balance, t.missingAccountFunds * 2);
         // Not entry point reverts.
         vm.expectRevert(MultiOwnable.Unauthorized.selector);
@@ -72,7 +78,10 @@ contract TestValidateUserOp is SmartWalletTestBase, KeyServiceEmitter {
         t.userOpHash = keccak256("123");
         WebAuthnInfo memory webAuthn = Utils.getWebAuthnStruct(t.userOpHash);
 
-        (bytes32 r, bytes32 s) = vm.signP256(passkeyPrivateKey, webAuthn.messageHash);
+        (bytes32 r, bytes32 s) = vm.signP256(
+            passkeyPrivateKey,
+            webAuthn.messageHash
+        );
         s = bytes32(Utils.normalizeS(uint256(s)));
         bytes memory sig = abi.encode(
             CoinbaseSmartWallet.SignatureWrapper({
@@ -96,25 +105,47 @@ contract TestValidateUserOp is SmartWalletTestBase, KeyServiceEmitter {
         UserOperation memory userOp;
         // Success returns 0.
         userOp.signature = sig;
-        assertEq(ep.validateUserOp(address(account), userOp, t.userOpHash, t.missingAccountFunds), 0);
+        assertEq(
+            ep.validateUserOp(
+                address(account),
+                userOp,
+                t.userOpHash,
+                t.missingAccountFunds
+            ),
+            0
+        );
     }
 
     function test_reverts_whenSelectorInvalidForReplayableNonceKey() public {
         UserOperation memory userOp;
         userOp.nonce = 0;
-        userOp.callData = abi.encodeWithSelector(CoinbaseSmartWallet.executeWithoutChainIdValidation.selector, "");
+        userOp.callData = abi.encodeWithSelector(
+            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
+            ""
+        );
         vm.startPrank(account.entryPoint());
-        vm.expectRevert(abi.encodeWithSelector(CoinbaseSmartWallet.InvalidNonceKey.selector, 0));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                CoinbaseSmartWallet.InvalidNonceKey.selector,
+                0
+            )
+        );
         account.validateUserOp(userOp, "", 0);
     }
 
     function test_reverts_whenReplayableNonceKeyInvalidForSelector() public {
         UserOperation memory userOp;
         userOp.nonce = account.REPLAYABLE_NONCE_KEY() << 64;
-        userOp.callData = abi.encodeWithSelector(CoinbaseSmartWallet.execute.selector, "");
+        userOp.callData = abi.encodeWithSelector(
+            CoinbaseSmartWallet.execute.selector,
+            ""
+        );
         vm.startPrank(account.entryPoint());
         vm.expectRevert(
-            abi.encodeWithSelector(CoinbaseSmartWallet.InvalidNonceKey.selector, account.REPLAYABLE_NONCE_KEY())
+            abi.encodeWithSelector(
+                CoinbaseSmartWallet.InvalidNonceKey.selector,
+                account.REPLAYABLE_NONCE_KEY()
+            )
         );
         account.validateUserOp(userOp, "", 0);
     }

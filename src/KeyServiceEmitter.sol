@@ -5,6 +5,7 @@ import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 
+import {console} from "forge-std/console.sol";
 
 contract KeyServiceEmitter is IKeyServiceEmitter {
     /// the purpose of this contract is to be deployed via create2
@@ -14,8 +15,13 @@ contract KeyServiceEmitter is IKeyServiceEmitter {
 
     /// FUNCTIONS
 
-    function emitActionRequest(address sender, UserOperation calldata userOp) external {
-        emit KeyServiceActionRequest(sender, userOp);
+    function emitActionRequest(
+        address sender,
+        UserOperation calldata userOp
+    ) external {
+        console.log("tag");
+
+        // emit KeyServiceActionRequest(sender, userOp);
     }
 }
 
