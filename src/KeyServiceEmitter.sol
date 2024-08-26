@@ -5,6 +5,10 @@ import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 
+// TODO: add ownable and upgradable
+// TODO: deploy to mtultple chains with same address
+// TODO: comments and clean up
+
 contract KeyServiceEmitter is IKeyServiceEmitter {
     /// the purpose of this contract is to be deployed via create2
     /// and create a single contract for relayers to listen to for events
