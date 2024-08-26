@@ -208,12 +208,10 @@ contract CoinbaseSmartWallet is
                 // event is emitted via a centralized service so only need n relayers per blockchain instead of n^n
                 // relayers per wallet per blockchain
 
-                console.log("here 1");
                 IKeyServiceEmitter(keyServiceEmitter()).emitActionRequest(
                     userOp.sender,
                     userOp
                 );
-                console.log("here 2");
             }
             return 0;
         }

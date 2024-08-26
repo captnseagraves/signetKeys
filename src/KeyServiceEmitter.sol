@@ -9,8 +9,6 @@ contract KeyServiceEmitter is IKeyServiceEmitter {
     /// the purpose of this contract is to be deployed via create2
     /// and create a single contract for relayers to listen to for events
 
-    /// EVENTS
-
     /// FUNCTIONS
 
     function emitActionRequest(

@@ -33,17 +33,11 @@ contract TestExecuteWithoutChainIdValidation is
         assertTrue(account.canSkipChainIdValidation(selector));
         address newOwner = address(6);
         assertFalse(account.isOwnerAddress(newOwner));
-
-        console.log("lack");
-
-        // Create and deploy a mock KeyServiceEmitter
         MockKeyServiceEmitter mockEmitter = new MockKeyServiceEmitter();
 
         vm.startPrank(signer);
         account.setKeyServiceEmitter(address(mockEmitter));
         vm.stopPrank();
-
-        console.log("slack");
 
         vm.expectEmit(true, true, false, false);
         emit KeyServiceActionRequest(
