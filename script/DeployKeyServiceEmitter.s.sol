@@ -12,9 +12,9 @@ contract DeployKeyServiceEmitterScript is Script {
         console2.log("Deploying on chain ID", block.chainid);
 
         // deploy instance of CoinbaseSmartWallet
-        address contractInstance = new KeyServiceEmitter();
+        KeyServiceEmitter contractInstance = new KeyServiceEmitter();
 
-        console2.log("contractInstance", contractInstance);
+        console2.log("contractInstance", address(contractInstance));
 
         vm.stopBroadcast();
     }
