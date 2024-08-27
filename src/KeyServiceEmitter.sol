@@ -6,7 +6,7 @@ import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 
 // TODO: add ownable and upgradable
-// TODO: deploy to mtultple chains with same address
+// TODO: deploy to multiple chains with same address
 // TODO: comments and clean up
 
 contract KeyServiceEmitter is IKeyServiceEmitter {
