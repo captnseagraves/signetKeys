@@ -68,9 +68,7 @@ contract DeployWalletScript is Script {
             signature: ""
         });
 
-        address signerPrivateKey = vm.envAddress(
-            "OPTIMISM_SEPOLIA_PRIVATE_KEY"
-        );
+        uint256 signerPrivateKey = vm.envUint("OPTIMISM_SEPOLIA_PRIVATE_KEY");
 
         // sign userOp
         bytes32 toSign = entryPoint.getUserOpHash(userOp);
