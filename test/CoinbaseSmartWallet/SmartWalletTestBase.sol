@@ -28,12 +28,15 @@ contract SmartWalletTestBase is Test {
     uint256 userOpNonce;
     bytes userOpCalldata;
 
+    bytes bytecode;
+
     function setUp() public virtual {
         vm.etch(
             0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
             Static.ENTRY_POINT_BYTES
         );
         account = new MockCoinbaseSmartWallet();
+        bytecode = address(account).code;
         owners.push(abi.encode(signer));
         owners.push(passkeyOwner);
         account.initialize(owners);

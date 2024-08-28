@@ -20,8 +20,8 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
     uint256 mainnetFork;
     uint256 optimismFork;
 
-    address payable targetAddress =
-        payable(0x1234567890123456789012345678901234567890);
+    // address payable targetAddress =
+    //     payable(0x1234567890123456789012345678901234567890);
 
     bytes[] calls;
 
@@ -32,19 +32,23 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
         );
 
-        bytes memory bytecode = address(account).code;
-
+        // setup mainnet fork
         mainnetFork = vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
-        vm.etch(targetAddress, bytecode);
-        mainnetAccount = MockCoinbaseSmartWallet(targetAddress);
-        mainnetAccount.initialize(owners);
-        console.log("mainnetAccount", address(mainnetAccount));
+        vm.etch(address(account), bytecode);
+        mainnetAccount = MockCoinbaseSmartWallet(payable(address(account)));
+        MockKeyServiceEmitter mainnetMockEmitter = new MockKeyServiceEmitter();
+        vm.startPrank(signer);
+        mainnetAccount.setKeyServiceEmitter(address(mainnetMockEmitter));
+        vm.stopPrank();
 
+        // setup optimism fork
         optimismFork = vm.createSelectFork(vm.envString("OPTIMISM_RPC_URL"));
-        vm.etch(targetAddress, bytecode);
-        optimismAccount = MockCoinbaseSmartWallet(targetAddress);
-        optimismAccount.initialize(owners);
-        console.log("optimismAccount", address(optimismAccount));
+        vm.etch(address(account), bytecode);
+        optimismAccount = MockCoinbaseSmartWallet(payable(address(account)));
+        MockKeyServiceEmitter optimismMockEmitter = new MockKeyServiceEmitter();
+        vm.startPrank(signer);
+        optimismAccount.setKeyServiceEmitter(address(optimismMockEmitter));
+        vm.stopPrank();
     }
 
     function test_reverts_whenCallerNotEntryPoint() public {
@@ -53,23 +57,19 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
     }
 
     function test_succeeds_crossChain_whenSignaturesMatch() public {
+        // test operation built for local network on mainnet fork
         vm.selectFork(mainnetFork);
 
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
         assertTrue(mainnetAccount.canSkipChainIdValidation(selector));
         address newOwner = address(6);
         assertFalse(mainnetAccount.isOwnerAddress(newOwner));
-        MockKeyServiceEmitter mockEmitter = new MockKeyServiceEmitter();
 
         calls.push(abi.encodeWithSelector(selector, newOwner));
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
             calls
         );
-
-        vm.startPrank(signer);
-        mainnetAccount.setKeyServiceEmitter(address(mockEmitter));
-        vm.stopPrank();
 
         vm.expectEmit(true, true, false, false);
         emit KeyServiceActionRequest(
@@ -78,14 +78,10 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
         );
 
         _sendUserOperation(_getUserOpWithSignature());
-        assertTrue(account.isOwnerAddress(newOwner));
+        assertTrue(mainnetAccount.isOwnerAddress(newOwner));
 
-        //duplicate operation on optimismFork
+        // duplicate operation on optimismFork
         vm.selectFork(optimismFork);
-
-        vm.startPrank(signer);
-        optimismAccount.setKeyServiceEmitter(address(mockEmitter));
-        vm.stopPrank();
 
         vm.expectEmit(true, true, false, false);
         emit KeyServiceActionRequest(
@@ -94,7 +90,7 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
         );
 
         _sendUserOperation(_getUserOpWithSignature());
-        assertTrue(account.isOwnerAddress(newOwner));
+        assertTrue(optimismAccount.isOwnerAddress(newOwner));
     }
 
     function test_reverts_whenSelectorNotApproved() public {
