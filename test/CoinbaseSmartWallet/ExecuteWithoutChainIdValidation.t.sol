@@ -33,11 +33,6 @@ contract TestExecuteWithoutChainIdValidation is
         assertTrue(account.canSkipChainIdValidation(selector));
         address newOwner = address(6);
         assertFalse(account.isOwnerAddress(newOwner));
-        MockKeyServiceEmitter mockEmitter = new MockKeyServiceEmitter();
-
-        vm.startPrank(signer);
-        account.setKeyServiceEmitter(address(mockEmitter));
-        vm.stopPrank();
 
         vm.expectEmit(true, true, false, false);
         emit KeyServiceActionRequest(

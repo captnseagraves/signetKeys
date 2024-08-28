@@ -35,6 +35,12 @@ contract SmartWalletTestBase is Test {
             0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
             Static.ENTRY_POINT_BYTES
         );
+
+        // vm.etch(
+        //     0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e,
+        //     Static.KEY_SERVICE_EMITTER_BYTES
+        // );
+
         account = new MockCoinbaseSmartWallet();
         bytecode = address(account).code;
         owners.push(abi.encode(signer));

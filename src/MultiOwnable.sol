@@ -56,7 +56,11 @@ contract MultiOwnable {
     /// @param index         The index of the owner to be removed.
     /// @param expectedOwner The owner passed in the remove call.
     /// @param actualOwner   The actual owner at `index`.
-    error WrongOwnerAtIndex(uint256 index, bytes expectedOwner, bytes actualOwner);
+    error WrongOwnerAtIndex(
+        uint256 index,
+        bytes expectedOwner,
+        bytes actualOwner
+    );
 
     /// @notice Thrown when a provided owner is neither 64 bytes long (for public key)
     ///         nor a ABI encoded address.
@@ -99,15 +103,24 @@ contract MultiOwnable {
     ///
     /// @param owner The owner address.
     function addOwnerAddress(address owner) external virtual onlyOwner {
-        _addOwnerAtIndex(abi.encode(owner), _getMultiOwnableStorage().nextOwnerIndex++);
+        _addOwnerAtIndex(
+            abi.encode(owner),
+            _getMultiOwnableStorage().nextOwnerIndex++
+        );
     }
 
     /// @notice Adds a new public-key owner.
     ///
     /// @param x The owner public key x coordinate.
     /// @param y The owner public key y coordinate.
-    function addOwnerPublicKey(bytes32 x, bytes32 y) external virtual onlyOwner {
-        _addOwnerAtIndex(abi.encode(x, y), _getMultiOwnableStorage().nextOwnerIndex++);
+    function addOwnerPublicKey(
+        bytes32 x,
+        bytes32 y
+    ) external virtual onlyOwner {
+        _addOwnerAtIndex(
+            abi.encode(x, y),
+            _getMultiOwnableStorage().nextOwnerIndex++
+        );
     }
 
     /// @notice Removes owner at the given `index`.
@@ -118,7 +131,10 @@ contract MultiOwnable {
     ///
     /// @param index The index of the owner to be removed.
     /// @param owner The ABI encoded bytes of the owner to be removed.
-    function removeOwnerAtIndex(uint256 index, bytes calldata owner) external virtual onlyOwner {
+    function removeOwnerAtIndex(
+        uint256 index,
+        bytes calldata owner
+    ) external virtual onlyOwner {
         if (ownerCount() == 1) {
             revert LastOwner();
         }
@@ -134,7 +150,10 @@ contract MultiOwnable {
     ///
     /// @param index The index of the owner to be removed.
     /// @param owner The ABI encoded bytes of the owner to be removed.
-    function removeLastOwner(uint256 index, bytes calldata owner) external virtual onlyOwner {
+    function removeLastOwner(
+        uint256 index,
+        bytes calldata owner
+    ) external virtual onlyOwner {
         uint256 ownersRemaining = ownerCount();
         if (ownersRemaining > 1) {
             revert NotLastOwner(ownersRemaining);
@@ -148,7 +167,9 @@ contract MultiOwnable {
     /// @param account The account address to check.
     ///
     /// @return `true` if the account is an owner else `false`.
-    function isOwnerAddress(address account) public view virtual returns (bool) {
+    function isOwnerAddress(
+        address account
+    ) public view virtual returns (bool) {
         return _getMultiOwnableStorage().isOwner[abi.encode(account)];
     }
 
@@ -158,7 +179,10 @@ contract MultiOwnable {
     /// @param y The public key y coordinate.
     ///
     /// @return `true` if the account is an owner else `false`.
-    function isOwnerPublicKey(bytes32 x, bytes32 y) public view virtual returns (bool) {
+    function isOwnerPublicKey(
+        bytes32 x,
+        bytes32 y
+    ) public view virtual returns (bool) {
         return _getMultiOwnableStorage().isOwner[abi.encode(x, y)];
     }
 
@@ -167,7 +191,9 @@ contract MultiOwnable {
     /// @param account The account, should be ABI encoded address or public key.
     ///
     /// @return `true` if the account is an owner else `false`.
-    function isOwnerBytes(bytes memory account) public view virtual returns (bool) {
+    function isOwnerBytes(
+        bytes memory account
+    ) public view virtual returns (bool) {
         return _getMultiOwnableStorage().isOwner[account];
     }
 
@@ -176,7 +202,9 @@ contract MultiOwnable {
     /// @param index The index to lookup.
     ///
     /// @return The owner bytes (empty if no owner is registered at this `index`).
-    function ownerAtIndex(uint256 index) public view virtual returns (bytes memory) {
+    function ownerAtIndex(
+        uint256 index
+    ) public view virtual returns (bytes memory) {
         return _getMultiOwnableStorage().ownerAtIndex[index];
     }
 
@@ -218,7 +246,10 @@ contract MultiOwnable {
                 revert InvalidOwnerBytesLength(owners[i]);
             }
 
-            if (owners[i].length == 32 && uint256(bytes32(owners[i])) > type(uint160).max) {
+            if (
+                owners[i].length == 32 &&
+                uint256(bytes32(owners[i])) > type(uint160).max
+            ) {
                 revert InvalidEthereumAddressOwner(owners[i]);
             }
 
@@ -233,7 +264,10 @@ contract MultiOwnable {
     ///
     /// @param owner The owner raw bytes to register.
     /// @param index The index to write to.
-    function _addOwnerAtIndex(bytes memory owner, uint256 index) internal virtual {
+    function _addOwnerAtIndex(
+        bytes memory owner,
+        uint256 index
+    ) internal virtual {
         if (isOwnerBytes(owner)) revert AlreadyOwner(owner);
 
         MultiOwnableStorage storage $ = _getMultiOwnableStorage();
@@ -250,11 +284,18 @@ contract MultiOwnable {
     ///
     /// @param index The index of the owner to be removed.
     /// @param owner The ABI encoded bytes of the owner to be removed.
-    function _removeOwnerAtIndex(uint256 index, bytes calldata owner) internal virtual {
+    function _removeOwnerAtIndex(
+        uint256 index,
+        bytes calldata owner
+    ) internal virtual {
         bytes memory owner_ = ownerAtIndex(index);
         if (owner_.length == 0) revert NoOwnerAtIndex(index);
         if (keccak256(owner_) != keccak256(owner)) {
-            revert WrongOwnerAtIndex({index: index, expectedOwner: owner, actualOwner: owner_});
+            revert WrongOwnerAtIndex({
+                index: index,
+                expectedOwner: owner,
+                actualOwner: owner_
+            });
         }
 
         MultiOwnableStorage storage $ = _getMultiOwnableStorage();
@@ -279,7 +320,11 @@ contract MultiOwnable {
     /// @notice Helper function to get a storage reference to the `MultiOwnableStorage` struct.
     ///
     /// @return $ A storage reference to the `MultiOwnableStorage` struct.
-    function _getMultiOwnableStorage() internal pure returns (MultiOwnableStorage storage $) {
+    function _getMultiOwnableStorage()
+        internal
+        pure
+        returns (MultiOwnableStorage storage $)
+    {
         assembly ("memory-safe") {
             $.slot := MUTLI_OWNABLE_STORAGE_LOCATION
         }
