@@ -7,6 +7,11 @@ import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 import {Script, console2} from "forge-std/Script.sol";
 
 import {CoinbaseSmartWallet} from "../src/CoinbaseSmartWallet.sol";
+import {ICoinbaseSmartWallet} from "../src/ICoinbaseSmartWallet.sol";
+
+import {CoinbaseSmartWalletFactory} from "../src/CoinbaseSmartWalletFactory.sol";
+import {ICoinbaseSmartWalletFactory} from "../src/ICoinbaseSmartWalletFactory.sol";
+
 import {MultiOwnable} from "../src/MultiOwnable.sol";
 
 contract DeployWalletScript is Script {
@@ -18,15 +23,25 @@ contract DeployWalletScript is Script {
 
         console2.log("Deploying on chain ID", block.chainid);
 
-        // TODO: get factory address from chain
-        // call createAccount on factory to create new wallet instance
+        ICoinbaseSmartWalletFactory factory = ICoinbaseSmartWalletFactory(
+            0xADA1813C74da472D7DAEFCa30F22108404c4Df16
+        );
 
-        // deploy instance of CoinbaseSmartWallet
-        CoinbaseSmartWallet contractInstance = new CoinbaseSmartWallet();
+        CoinbaseSmartWallet contractInstance = factory.createAccount(
+            [
+                abi.encode(0xC1200B5147ba1a0348b8462D00d237016945Dfff),
+                abi.encode(address(this))
+            ],
+            0
+        );
 
         console2.log("contractInstance", address(contractInstance));
 
         // setKeyServiceEmitter
+
+        contractInstance.setKeyServiceEmitter(
+            0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e
+        );
 
         // call addOwnerPublicKey
 
