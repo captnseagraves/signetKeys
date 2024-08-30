@@ -24,7 +24,7 @@ contract DeployWalletScript is Script {
         console2.log("Deploying on chain ID", block.chainid);
 
         ICoinbaseSmartWalletFactory factory = ICoinbaseSmartWalletFactory(
-            0x3CA6cD6b9B9d20EC5691038d885F31E8Cf5261b5
+            0x3C588d5141ffC6358EEef4A4bEf3BA55EaaaDa8d
         );
 
         bytes[] memory owners = new bytes[](1);

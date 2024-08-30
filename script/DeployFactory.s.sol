@@ -8,11 +8,11 @@ import {CoinbaseSmartWallet, CoinbaseSmartWalletFactory} from "../src/CoinbaseSm
 
 contract DeployFactoryScript is Script {
     address constant EXPECTED_IMPLEMENTATION =
-        0x3CA6cD6b9B9d20EC5691038d885F31E8Cf5261b5;
+        0x3C588d5141ffC6358EEef4A4bEf3BA55EaaaDa8d;
     // we lose the 0BASED0 address, sad.
     // could find new salt that enables another based factory address
     address constant EXPECTED_FACTORY =
-        0xADA1813C74da472D7DAEFCa30F22108404c4Df16;
+        0xce1520E676e5F126F024E0FCd342b66FA9f97593;
 
     function run() public {
         console2.log("Deploying on chain ID", block.chainid);
