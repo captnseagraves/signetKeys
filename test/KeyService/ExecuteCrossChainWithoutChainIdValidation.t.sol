@@ -18,9 +18,6 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
     uint256 mainnetFork;
     uint256 optimismFork;
 
-    // address payable targetAddress =
-    //     payable(0x1234567890123456789012345678901234567890);
-
     bytes[] calls;
 
     function setUp() public override {

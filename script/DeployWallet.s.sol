@@ -24,85 +24,19 @@ contract DeployWalletScript is Script {
         console2.log("Deploying on chain ID", block.chainid);
 
         ICoinbaseSmartWalletFactory factory = ICoinbaseSmartWalletFactory(
-            0x3C588d5141ffC6358EEef4A4bEf3BA55EaaaDa8d
+            0xce1520E676e5F126F024E0FCd342b66FA9f97593
         );
 
-        bytes[] memory owners = new bytes[](1);
+        bytes[] memory owners = new bytes[](2);
         owners[0] = abi.encode(address(this));
+        owners[1] = abi.encode(0xC1200B5147ba1a0348b8462D00d237016945Dfff);
         CoinbaseSmartWallet contractInstance = factory.createAccount(owners, 0);
 
         console2.log("contractInstance", address(contractInstance));
-
-        // setKeyServiceEmitter
-
-        // contractInstance.setKeyServiceEmitter(
-        //     0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e
-        // );
-
-        // call addOwnerPublicKey
-
-        // set userOpNonce
-        uint256 userOpNonce = contractInstance.REPLAYABLE_NONCE_KEY() << 64;
-        // instantiate userOpCalldata
-        bytes memory userOpCalldata;
-        // instantiate calls
-        bytes[] memory calls = new bytes[](1);
-
-        // set call selector
-        bytes4 selector = MultiOwnable.addOwnerAddress.selector;
-        // set call newOwner value
-        address newOwner = address(0x5Ad3b55625553CEf54D7561cD256658537d54AAd); //captnseagraves.eth
-
-        // push call to calls
-        calls[0] = (abi.encodeWithSelector(selector, newOwner));
-
-        // set userOpCalldata
-        userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
-            calls
-        );
-
-        // TODO: may need to deploy a paymaster at same address on each chain to make sigs work with paymasters
-
-        // instantiate userOp
-        UserOperation memory userOp = UserOperation({
-            sender: address(contractInstance),
-            nonce: userOpNonce,
-            initCode: "",
-            callData: userOpCalldata,
-            callGasLimit: uint256(1_000_000),
-            verificationGasLimit: uint256(1_000_000),
-            preVerificationGas: uint256(0),
-            maxFeePerGas: uint256(0),
-            maxPriorityFeePerGas: uint256(0),
-            paymasterAndData: "",
-            signature: ""
-        });
-
-        uint256 signerPrivateKey = vm.envUint("OPTIMISM_SEPOLIA_PRIVATE_KEY");
-
-        // sign userOp
-        bytes32 toSign = entryPoint.getUserOpHash(userOp);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, toSign);
-
-        // set userOp signature
-        userOp.signature = abi.encodePacked(uint8(0), r, s, v);
-
-        // instantiate ops
-        UserOperation[] memory ops = new UserOperation[](1);
-        ops[0] = userOp;
-
-        // send userOp to entryPoint with fees going to 0 address
-        entryPoint.handleOps(ops, payable(address(0)));
-
-        console2.log(
-            "new owner address updated:",
-            contractInstance.isOwnerAddress(newOwner)
-        );
 
         vm.stopBroadcast();
     }
 }
 
 // forge script script/DeployWallet.s.sol:DeployWalletScript
-// --optimize --rpc-url $OPTIMISM_SEPOLIA_RPC_URL --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 --verify
+// --rpc-url $OPTIMISM_SEPOLIA_RPC_URL --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 --verify
