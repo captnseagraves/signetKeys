@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 import "../CoinbaseSmartWallet/SmartWalletTestBase.sol";
 
-import {MockKeyServiceEmitter} from "../mocks/MockKeyServiceEmitter.sol";
-
 import "../../src/KeyServiceEmitter.sol";
 
 import {console} from "forge-std/console.sol";
@@ -36,19 +34,19 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
         mainnetFork = vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
         vm.etch(address(account), bytecode);
         mainnetAccount = MockCoinbaseSmartWallet(payable(address(account)));
-        MockKeyServiceEmitter mainnetMockEmitter = new MockKeyServiceEmitter();
-        vm.startPrank(signer);
-        mainnetAccount.setKeyServiceEmitter(address(mainnetMockEmitter));
-        vm.stopPrank();
+        vm.etch(
+            0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e,
+            Static.KEY_SERVICE_EMITTER_BYTES
+        );
 
         // setup optimism fork
         optimismFork = vm.createSelectFork(vm.envString("OPTIMISM_RPC_URL"));
         vm.etch(address(account), bytecode);
         optimismAccount = MockCoinbaseSmartWallet(payable(address(account)));
-        MockKeyServiceEmitter optimismMockEmitter = new MockKeyServiceEmitter();
-        vm.startPrank(signer);
-        optimismAccount.setKeyServiceEmitter(address(optimismMockEmitter));
-        vm.stopPrank();
+        vm.etch(
+            0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e,
+            Static.KEY_SERVICE_EMITTER_BYTES
+        );
     }
 
     function test_reverts_whenCallerNotEntryPoint() public {

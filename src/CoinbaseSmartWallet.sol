@@ -60,10 +60,6 @@ contract CoinbaseSmartWallet is
     /// @dev Helps enforce sequential sequencing of replayable transactions.
     uint256 public constant REPLAYABLE_NONCE_KEY = 8453;
 
-    /// TODO comments and ensure variable is kosher with upgradeable pattern
-
-    address private _keyServiceEmitter;
-
     /// @notice Thrown when `initialize` is called but the account already has had at least one owner.
     error Initialized();
 
@@ -279,15 +275,11 @@ contract CoinbaseSmartWallet is
         return 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
     }
 
-    function setKeyServiceEmitter(address newEmitter) external onlyOwner {
-        _keyServiceEmitter = newEmitter;
-    }
-
     /// @notice Returns the address of the KeyServiceEmitter v0.1
     ///
     /// @return The address of the KeyServiceEmitter v0.1
     function keyServiceEmitter() public view virtual returns (address) {
-        return _keyServiceEmitter;
+        return 0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e;
     }
 
     /// @notice Computes the hash of the `UserOperation` in the same way as EntryPoint v0.6, but

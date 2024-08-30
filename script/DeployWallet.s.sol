@@ -24,24 +24,20 @@ contract DeployWalletScript is Script {
         console2.log("Deploying on chain ID", block.chainid);
 
         ICoinbaseSmartWalletFactory factory = ICoinbaseSmartWalletFactory(
-            0xADA1813C74da472D7DAEFCa30F22108404c4Df16
+            0x3CA6cD6b9B9d20EC5691038d885F31E8Cf5261b5
         );
 
-        CoinbaseSmartWallet contractInstance = factory.createAccount(
-            [
-                abi.encode(0xC1200B5147ba1a0348b8462D00d237016945Dfff),
-                abi.encode(address(this))
-            ],
-            0
-        );
+        bytes[] memory owners = new bytes[](1);
+        owners[0] = abi.encode(address(this));
+        CoinbaseSmartWallet contractInstance = factory.createAccount(owners, 0);
 
         console2.log("contractInstance", address(contractInstance));
 
         // setKeyServiceEmitter
 
-        contractInstance.setKeyServiceEmitter(
-            0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e
-        );
+        // contractInstance.setKeyServiceEmitter(
+        //     0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e
+        // );
 
         // call addOwnerPublicKey
 

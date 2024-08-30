@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.4;
 
+import {CoinbaseSmartWallet} from "./CoinbaseSmartWallet.sol";
+
 interface ICoinbaseSmartWalletFactory {
     function createAccount(
         bytes[] calldata owners,
