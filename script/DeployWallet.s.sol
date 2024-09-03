@@ -30,9 +30,10 @@ contract DeployWalletScript is Script {
         bytes[] memory owners = new bytes[](2);
         owners[0] = abi.encode(address(this));
         owners[1] = abi.encode(0xC1200B5147ba1a0348b8462D00d237016945Dfff);
-        CoinbaseSmartWallet contractInstance = factory.createAccount(owners, 0);
+        CoinbaseSmartWallet contractInstance = factory.createAccount(owners, 1);
 
         console2.log("contractInstance", address(contractInstance));
+        /// expected address: 0x8636D078EFA37b7A8003B5Ec3E38C4E2A8D18d6B
 
         vm.stopBroadcast();
     }

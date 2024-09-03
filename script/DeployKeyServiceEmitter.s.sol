@@ -22,4 +22,4 @@ contract DeployKeyServiceEmitterScript is Script {
 }
 
 // forge script script/DeployKeyServiceEmitter.s.sol:DeployKeyServiceEmitterScript
-// --rpc-url $OPTIMISM_SEPOLIA_RPC_URL --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 --verify
+// --rpc-url $OPTIMISM_SEPOLIA_RPC_URL --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 --etherscan-api-key $OPTIMISM_ETHERSCAN_API_KEY --verify

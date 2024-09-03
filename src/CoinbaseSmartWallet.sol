@@ -179,12 +179,19 @@ contract CoinbaseSmartWallet is
     {
         uint256 key = userOp.nonce >> 64;
 
+        console.log("key", key);
+
         bool emitKeyServiceActionRequest;
 
         if (
             bytes4(userOp.callData) ==
             this.executeWithoutChainIdValidation.selector
         ) {
+            console.log(
+                "emitKeyServiceActionRequest",
+                emitKeyServiceActionRequest
+            );
+
             emitKeyServiceActionRequest = true;
             userOpHash = getUserOpHashWithoutChainId(userOp);
 
@@ -193,12 +200,15 @@ contract CoinbaseSmartWallet is
             }
         } else {
             if (key == REPLAYABLE_NONCE_KEY) {
+                console.log("not it");
                 revert InvalidNonceKey(key);
             }
         }
 
+        console.log("before");
         // Return 0 if the recovered address matches the owner.
         if (_isValidSignature(userOpHash, userOp.signature)) {
+            console.log("after");
             if (emitKeyServiceActionRequest) {
                 // call centralized key service emitter function
                 // event is emitted via a centralized service so only need n relayers per blockchain instead of n^n
@@ -360,7 +370,11 @@ contract CoinbaseSmartWallet is
         );
         bytes memory ownerBytes = ownerAtIndex(sigWrapper.ownerIndex);
 
+        console.log("here 1");
+
         if (ownerBytes.length == 32) {
+            console.log("here 2");
+
             if (uint256(bytes32(ownerBytes)) > type(uint160).max) {
                 // technically should be impossible given owners can only be added with
                 // addOwnerAddress and addOwnerPublicKey, but we leave incase of future changes.
@@ -368,6 +382,8 @@ contract CoinbaseSmartWallet is
             }
 
             address owner;
+            console.log("sigOwnerInContract", owner);
+
             assembly ("memory-safe") {
                 owner := mload(add(ownerBytes, 32))
             }

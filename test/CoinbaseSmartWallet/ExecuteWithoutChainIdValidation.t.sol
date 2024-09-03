@@ -34,17 +34,18 @@ contract TestExecuteWithoutChainIdValidation is
         address newOwner = address(6);
         assertFalse(account.isOwnerAddress(newOwner));
 
+        calls.push(abi.encodeWithSelector(selector, newOwner));
+        userOpCalldata = abi.encodeWithSelector(
+            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
+            calls
+        );
+
         vm.expectEmit(true, true, false, false);
         emit KeyServiceActionRequest(
             address(account),
             _getUserOpWithSignature()
         );
 
-        calls.push(abi.encodeWithSelector(selector, newOwner));
-        userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
-            calls
-        );
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(account.isOwnerAddress(newOwner));
     }
