@@ -8,11 +8,11 @@ import {CoinbaseSmartWallet, CoinbaseSmartWalletFactory} from "../src/CoinbaseSm
 
 contract DeployFactoryScript is Script {
     address constant EXPECTED_IMPLEMENTATION =
-        0x3C588d5141ffC6358EEef4A4bEf3BA55EaaaDa8d;
+        0xc88e6E5b01C7619Ae5767f67782850d39f758153;
     // we lose the 0BASED0 address, sad.
     // could find new salt that enables another based factory address
     address constant EXPECTED_FACTORY =
-        0xce1520E676e5F126F024E0FCd342b66FA9f97593;
+        0x5A685c883E4388c17747170de6228a0da1840Cbe;
 
     function run() public {
         console2.log("Deploying on chain ID", block.chainid);
@@ -32,5 +32,4 @@ contract DeployFactoryScript is Script {
     }
 }
 
-// forge script script/DeployFactory.s.sol:DeployFactoryScript --rpc-url $OPTIMISM_SEPOLIA_RPC_URL
-// --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 --verify
+// forge script script/DeployFactory.s.sol:DeployFactoryScript --rpc-url $OPTIMISM_SEPOLIA_RPC_URL --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 --etherscan-api-key $OPTIMISM_ETHERSCAN_API_KEY --verify

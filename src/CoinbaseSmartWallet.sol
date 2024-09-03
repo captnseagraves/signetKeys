@@ -187,13 +187,13 @@ contract CoinbaseSmartWallet is
             bytes4(userOp.callData) ==
             this.executeWithoutChainIdValidation.selector
         ) {
+            emitKeyServiceActionRequest = true;
+            userOpHash = getUserOpHashWithoutChainId(userOp);
+
             console.log(
                 "emitKeyServiceActionRequest",
                 emitKeyServiceActionRequest
             );
-
-            emitKeyServiceActionRequest = true;
-            userOpHash = getUserOpHashWithoutChainId(userOp);
 
             if (key != REPLAYABLE_NONCE_KEY) {
                 revert InvalidNonceKey(key);
@@ -289,7 +289,7 @@ contract CoinbaseSmartWallet is
     ///
     /// @return The address of the KeyServiceEmitter v0.1
     function keyServiceEmitter() public view virtual returns (address) {
-        return 0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e;
+        return 0x117DA503d0C065A99C9cc640d963Bbd7081A0beb;
     }
 
     /// @notice Computes the hash of the `UserOperation` in the same way as EntryPoint v0.6, but
@@ -364,10 +364,15 @@ contract CoinbaseSmartWallet is
         bytes32 hash,
         bytes calldata signature
     ) internal view virtual override returns (bool) {
+        console.log("here start");
+
         SignatureWrapper memory sigWrapper = abi.decode(
             signature,
             (SignatureWrapper)
         );
+
+        console.log("here afterSigWrapper");
+
         bytes memory ownerBytes = ownerAtIndex(sigWrapper.ownerIndex);
 
         console.log("here 1");

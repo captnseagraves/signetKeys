@@ -8,7 +8,7 @@ import {KeyServiceEmitter} from "../src/KeyServiceEmitter.sol";
 
 contract DeployKeyServiceEmitterScript is Script {
     address constant EXPECTED_EMITTER_IMPLEMENTATION =
-        0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e;
+        0x117DA503d0C065A99C9cc640d963Bbd7081A0beb;
 
     function run() external {
         console2.log("Deploying on chain ID", block.chainid);

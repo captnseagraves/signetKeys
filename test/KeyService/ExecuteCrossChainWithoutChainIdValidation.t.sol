@@ -32,7 +32,7 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
         vm.etch(address(account), bytecode);
         mainnetAccount = MockCoinbaseSmartWallet(payable(address(account)));
         vm.etch(
-            0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e,
+            0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
             Static.KEY_SERVICE_EMITTER_BYTES
         );
 
@@ -41,7 +41,7 @@ contract TestExecuteCrossChainWithoutChainIdValidation is
         vm.etch(address(account), bytecode);
         optimismAccount = MockCoinbaseSmartWallet(payable(address(account)));
         vm.etch(
-            0xd1b25f4f40EB3C5458747AAd994f949Be5CFc97e,
+            0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
             Static.KEY_SERVICE_EMITTER_BYTES
         );
     }

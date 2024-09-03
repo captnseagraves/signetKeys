@@ -5,6 +5,7 @@ import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 
+import {console} from "forge-std/console.sol";
 // TODO: add ownable and upgradable
 // TODO: deploy to multiple chains with same address
 // TODO: comments and clean up
@@ -19,6 +20,8 @@ contract KeyServiceEmitter is IKeyServiceEmitter {
         address sender,
         UserOperation calldata userOp
     ) external {
+        console.log("emit event");
+
         emit KeyServiceActionRequest(sender, userOp);
     }
 }

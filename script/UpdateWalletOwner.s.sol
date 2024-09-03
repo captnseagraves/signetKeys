@@ -18,7 +18,7 @@ contract UpdateWalletOwnerScript is Script {
     IEntryPoint constant entryPoint =
         IEntryPoint(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789);
     address constant accountAddress =
-        0x8636D078EFA37b7A8003B5Ec3E38C4E2A8D18d6B; // Replace with your wallet address
+        0x4ECDd46934cE547fb49267D83bABF081cD09659C; // Replace with your wallet address
     address constant newOwner = 0x5Ad3b55625553CEf54D7561cD256658537d54AAd; // Replace with the new owner's address
     address bundler =
         address(uint160(uint256(keccak256(abi.encodePacked("bundler")))));
@@ -57,28 +57,7 @@ contract UpdateWalletOwnerScript is Script {
             calls
         );
 
-        vm.startBroadcast(signerPrivateKey);
-        _sendUserOperation(_getUserOpWithSignature());
-        vm.stopBroadcast();
-
-        console2.log(
-            "New owner address added:",
-            account.isOwnerAddress(newOwner)
-        );
-    }
-
-    function _sendUserOperation(UserOperation memory userOp) internal {
-        console2.log("sendUserOp here");
-
-        UserOperation[] memory ops = new UserOperation[](1);
-        ops[0] = userOp;
-        entryPoint.handleOps(ops, payable(bundler));
-    }
-
-    function _getUserOp() internal view returns (UserOperation memory userOp) {
-        console2.log("getUserOp here");
-
-        userOp = UserOperation({
+        UserOperation memory userOp = UserOperation({
             sender: accountAddress,
             nonce: userOpNonce,
             initCode: "",
@@ -91,26 +70,56 @@ contract UpdateWalletOwnerScript is Script {
             paymasterAndData: "",
             signature: ""
         });
-    }
 
-    function _getUserOpWithSignature()
-        internal
-        view
-        returns (UserOperation memory userOp)
-    {
-        userOp = _getUserOp();
-        userOp.signature = _sign(userOp);
-    }
-
-    function _sign(
-        UserOperation memory userOp
-    ) internal view virtual returns (bytes memory signature) {
-        console2.log("sign here");
-
-        bytes32 toSign = entryPoint.getUserOpHash(userOp);
+        bytes32 toSign = account.getUserOpHashWithoutChainId(userOp);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, toSign);
-        signature = abi.encodePacked(uint8(0), r, s, v);
+        userOp.signature = abi.encode(
+            CoinbaseSmartWallet.SignatureWrapper(0, abi.encodePacked(r, s, v))
+        );
+
+        UserOperation[] memory ops = new UserOperation[](1);
+        ops[0] = userOp;
+
+        vm.startBroadcast(signerPrivateKey);
+        entryPoint.handleOps(ops, payable(bundler));
+        vm.stopBroadcast();
+
+        console2.log(
+            "New owner address added:",
+            account.isOwnerAddress(newOwner)
+        );
     }
+
+    //     function _sendUserOperation(UserOperation memory userOp) internal {
+    //         console2.log("sendUserOp here");
+
+    //         UserOperation[] memory ops = new UserOperation[](1);
+    //         ops[0] = userOp;
+    //         entryPoint.handleOps(ops, payable(bundler));
+    //     }
+
+    //     function _getUserOp() internal view returns (UserOperation memory userOp) {
+    //         console2.log("getUserOp here");
+    //     }
+
+    //     function _getUserOpWithSignature()
+    //         internal
+    //         view
+    //         returns (UserOperation memory userOp)
+    //     {
+    //         userOp = _getUserOp();
+    //         userOp.signature = _sign(userOp);
+    //     }
+
+    //     function _sign(
+    //         UserOperation memory userOp
+    //     ) internal view virtual returns (bytes memory signature) {
+    //         console2.log("sign here");
+
+    //         bytes32 toSign = entryPoint.getUserOpHash(userOp);
+    //         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, toSign);
+    //         signature = abi.encodePacked(uint8(0), r, s, v);
+    //     }
 }
 
 // forge script script/DeployWallet.s.sol:DeployWalletScript
