@@ -21,7 +21,7 @@ contract DeployWalletScript is Script {
         console2.log("Deploying on chain ID", block.chainid);
 
         ICoinbaseSmartWalletFactory factory = ICoinbaseSmartWalletFactory(
-            0x5A685c883E4388c17747170de6228a0da1840Cbe
+            0x055c6b31791236338DcEd5c295127DD01D55ea04
         );
 
         bytes[] memory owners = new bytes[](1);
@@ -29,7 +29,7 @@ contract DeployWalletScript is Script {
         CoinbaseSmartWallet contractInstance = factory.createAccount(owners, 0);
 
         console2.log("contractInstance", address(contractInstance));
-        /// expected address: 0x4ECDd46934cE547fb49267D83bABF081cD09659C
+        /// expected address: 0x8AEaEa2b55b0Bb1d5a5e8e6898A175F79723922d
 
         vm.stopBroadcast();
     }

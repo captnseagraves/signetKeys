@@ -14,7 +14,7 @@ import {ICoinbaseSmartWalletFactory} from "../src/ICoinbaseSmartWalletFactory.so
 
 import {MultiOwnable} from "../src/MultiOwnable.sol";
 
-contract UpdateWalletOwnerScript is Script {
+contract ReplayUpdateWalletOwnerScript is Script {
     IEntryPoint constant entryPoint =
         IEntryPoint(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789);
     address constant accountAddress =
@@ -25,19 +25,10 @@ contract UpdateWalletOwnerScript is Script {
     uint256 signerPrivateKey = vm.envUint("OPTIMISM_SEPOLIA_PRIVATE_KEY");
     address signer = vm.addr(signerPrivateKey);
 
-    uint256 userOpNonce;
-    bytes userOpCalldata;
-
-    bytes[] calls;
-    // bytes[] memory calls = new bytes[](1);
-
     function run() external {
         CoinbaseSmartWallet account = CoinbaseSmartWallet(
             payable(accountAddress)
         );
-
-        userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
-        bytes4 selector = MultiOwnable.addOwnerAddress.selector;
 
         console2.log("wallet", address(account));
         console2.log("signer", signer);
@@ -52,34 +43,20 @@ contract UpdateWalletOwnerScript is Script {
         console2.log("keyServiceEmitter", account.keyServiceEmitter());
         console2.log("userOpNonce", account.REPLAYABLE_NONCE_KEY());
 
-        // push call to calls
-        calls.push(abi.encodeWithSelector(selector, newOwner));
-
-        // set userOpCalldata
-        userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
-            calls
-        );
-
+        // values have been updatesd to conform to expected format
         UserOperation memory userOp = UserOperation({
-            sender: accountAddress,
-            nonce: userOpNonce,
+            sender: 0x8AEaEa2b55b0Bb1d5a5e8e6898A175F79723922d,
+            nonce: 155930327655066839810048,
             initCode: "",
-            callData: userOpCalldata,
-            callGasLimit: uint256(1_000_000),
-            verificationGasLimit: uint256(1_000_000),
-            preVerificationGas: uint256(0),
-            maxFeePerGas: uint256(0),
-            maxPriorityFeePerGas: uint256(0),
+            callData: hex"2c2abd1e00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000240f0f3f240000000000000000000000005ad3b55625553cef54d7561cd256658537d54aad00000000000000000000000000000000000000000000000000000000",
+            callGasLimit: 1000000,
+            verificationGasLimit: 1000000,
+            preVerificationGas: 0,
+            maxFeePerGas: 0,
+            maxPriorityFeePerGas: 0,
             paymasterAndData: "",
-            signature: ""
+            signature: hex"000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000004167a8172be1ee0bc65777e80e495d7494e446380505d0486530403c6e0a55b4017576aedc4fd1d70a001a0c228ddb7c9ddf81a264853d7c6e19c00d4064cda6281b00000000000000000000000000000000000000000000000000000000000000"
         });
-
-        bytes32 toSign = account.getUserOpHashWithoutChainId(userOp);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, toSign);
-        userOp.signature = abi.encode(
-            CoinbaseSmartWallet.SignatureWrapper(0, abi.encodePacked(r, s, v))
-        );
 
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
@@ -99,4 +76,5 @@ contract UpdateWalletOwnerScript is Script {
 // --rpc-url $OPTIMISM_SEPOLIA_RPC_URL --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 --verify
 
 // event emitted on addOwnerAddress from OP Sepolia
+// userOp plus signature is reused above
 // KeyServiceActionRequest(sender: 0x8AEaEa2b55b0Bb1d5a5e8e6898A175F79723922d, userOp: UserOperation({ sender: 0x8AEaEa2b55b0Bb1d5a5e8e6898A175F79723922d, nonce: 155930327655066839810048 [1.559e23], initCode: 0x, callData: 0x2c2abd1e00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000240f0f3f240000000000000000000000005ad3b55625553cef54d7561cd256658537d54aad00000000000000000000000000000000000000000000000000000000, callGasLimit: 1000000 [1e6], verificationGasLimit: 1000000 [1e6], preVerificationGas: 0, maxFeePerGas: 0, maxPriorityFeePerGas: 0, paymasterAndData: 0x, signature: 0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000040000000000000000000000000000000000000000000000000000000000000004167a8172be1ee0bc65777e80e495d7494e446380505d0486530403c6e0a55b4017576aedc4fd1d70a001a0c228ddb7c9ddf81a264853d7c6e19c00d4064cda6281b00000000000000000000000000000000000000000000000000000000000000 }))
