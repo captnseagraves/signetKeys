@@ -19,7 +19,7 @@ contract ReplayUpdateWalletOwnerScript is Script {
         IEntryPoint(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789);
     address constant accountAddress =
         0x8AEaEa2b55b0Bb1d5a5e8e6898A175F79723922d; // Replace with your wallet address
-    address constant newOwner = 0x5Ad3b55625553CEf54D7561cD256658537d54AAd; // Replace with the new owner's address
+    address constant newOwner = 0x0397B15451aD09c5e7FD851Bcc1315462AC72C2F; // Replace with the new owner's address
     address bundler =
         address(uint160(uint256(keccak256(abi.encodePacked("bundler")))));
     uint256 signerPrivateKey = vm.envUint("OPTIMISM_SEPOLIA_PRIVATE_KEY");
@@ -37,8 +37,8 @@ contract ReplayUpdateWalletOwnerScript is Script {
             account.isOwnerAddress(0xC1200B5147ba1a0348b8462D00d237016945Dfff)
         );
         console2.log(
-            "is newOwner 0x5Ad3b55625553CEf54D7561cD256658537d54AAd owner?",
-            account.isOwnerAddress(0x5Ad3b55625553CEf54D7561cD256658537d54AAd)
+            "is newOwner 0x0397B15451aD09c5e7FD851Bcc1315462AC72C2F owner?",
+            account.isOwnerAddress(0x0397B15451aD09c5e7FD851Bcc1315462AC72C2F)
         );
         console2.log("keyServiceEmitter", account.keyServiceEmitter());
         console2.log("userOpNonce", account.REPLAYABLE_NONCE_KEY());
@@ -62,7 +62,16 @@ contract ReplayUpdateWalletOwnerScript is Script {
         ops[0] = userOp;
 
         vm.startBroadcast(signerPrivateKey);
-        entryPoint.handleOps(ops, payable(bundler));
+
+        try entryPoint.handleOps(ops, payable(address(account))) {
+            console2.log("Transaction executed successfully");
+        } catch Error(string memory reason) {
+            console2.log("Transaction failed with reason:", reason);
+        } catch (bytes memory lowLevelData) {
+            console2.log("Transaction failed with low-level error");
+            console2.logBytes(lowLevelData);
+        }
+
         vm.stopBroadcast();
 
         console2.log(
