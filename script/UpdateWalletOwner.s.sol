@@ -19,7 +19,7 @@ contract UpdateWalletOwnerScript is Script {
         IEntryPoint(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789);
     address constant accountAddress =
         0x8AEaEa2b55b0Bb1d5a5e8e6898A175F79723922d; // Replace with your wallet address
-    address constant newOwner = 0x0397B15451aD09c5e7FD851Bcc1315462AC72C2F; // Replace with the new owner's address
+    address constant newOwner = 0x5Ad3b55625553CEf54D7561cD256658537d54AAd; // Replace with the new owner's address
     address bundler =
         address(uint160(uint256(keccak256(abi.encodePacked("bundler")))));
     uint256 signerPrivateKey = vm.envUint("OPTIMISM_SEPOLIA_PRIVATE_KEY");
@@ -36,7 +36,14 @@ contract UpdateWalletOwnerScript is Script {
             payable(accountAddress)
         );
 
-        userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
+        uint256 accountNonce = account.REPLAYABLE_NONCE_KEY() << 64;
+
+        userOpNonce = entryPoint.getNonce(address(account), accountNonce);
+
+        // userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
+        // // incremented by 1 for 1 successful txn, will need to be each txn.
+
+        // userOpNonce += 1;
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
 
         console2.log("wallet", address(account));
@@ -46,11 +53,20 @@ contract UpdateWalletOwnerScript is Script {
             account.isOwnerAddress(0xC1200B5147ba1a0348b8462D00d237016945Dfff)
         );
         console2.log(
-            "is newOwner 0x0397B15451aD09c5e7FD851Bcc1315462AC72C2F owner?",
-            account.isOwnerAddress(0x0397B15451aD09c5e7FD851Bcc1315462AC72C2F)
+            "is newOwner 0x5Ad3b55625553CEf54D7561cD256658537d54AAd owner?",
+            account.isOwnerAddress(0x5Ad3b55625553CEf54D7561cD256658537d54AAd)
         );
         console2.log("keyServiceEmitter", account.keyServiceEmitter());
-        console2.log("userOpNonce", account.REPLAYABLE_NONCE_KEY());
+        console2.log(
+            "account.REPLAYABLE_NONCE_KEY()",
+            account.REPLAYABLE_NONCE_KEY()
+        );
+        console2.log("userOpNonce", userOpNonce + 1);
+
+        console2.log(
+            "currentNonce",
+            entryPoint.getNonce(address(account), 8453)
+        );
 
         // push call to calls
         calls.push(abi.encodeWithSelector(selector, newOwner));
@@ -109,3 +125,6 @@ contract UpdateWalletOwnerScript is Script {
 
 // this is the command that finally worked with forge script using --gas-estimate-multiplier 130 --skip-simulation
 // forge script script/UpdateWalletOwner.s.sol:UpdateWalletOwnerScript --rpc-url $OPTIMISM_SEPOLIA_RPC_URL --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 -vvvv --gas-estimate-multiplier 130 --skip-simulation
+
+// event from successful txn on op-sepolia
+// emit KeyServiceActionRequest(sender: 0x8AEaEa2b55b0Bb1d5a5e8e6898A175F79723922d, userOp: UserOperation({ sender: 0x8AEaEa2b55b0Bb1d5a5e8e6898A175F79723922d, nonce: 155930327655066839810049 [1.559e23], initCode: 0x, callData: 0x2c2abd1e00000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000000240f0f3f240000000000000000000000005ad3b55625553cef54d7561cd256658537d54aad00000000000000000000000000000000000000000000000000000000, callGasLimit: 10000000 [1e7], verificationGasLimit: 10000000 [1e7], preVerificationGas: 0, maxFeePerGas: 0, maxPriorityFeePerGas: 0, paymasterAndData: 0x, signature: 0x0000000000000000000000000000000000000000000000000000000000000020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000041d1403d9ec0273dc6d361a188e6f4c4039dac0993cbd066cf8e32c25e13ddbf441ed15909512d37e678c308f7d13f2582a0a7dd12019c73367ae0b8e576ebd2371c00000000000000000000000000000000000000000000000000000000000000 }))
