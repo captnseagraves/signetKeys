@@ -38,7 +38,14 @@ contract UpdateWalletOwnerScript is Script {
 
         uint256 accountNonce = account.REPLAYABLE_NONCE_KEY() << 64;
 
-        userOpNonce = entryPoint.getNonce(address(account), accountNonce);
+        console2.log("accountNonce", accountNonce);
+
+        userOpNonce = entryPoint.getNonce(
+            address(account),
+            uint192(accountNonce)
+        );
+
+        console2.log("userOpNonce", userOpNonce);
 
         // userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
         // // incremented by 1 for 1 successful txn, will need to be each txn.
@@ -47,21 +54,14 @@ contract UpdateWalletOwnerScript is Script {
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
 
         console2.log("wallet", address(account));
-        console2.log("signer", signer);
-        console2.log(
-            "is 0xC1200B5147ba1a0348b8462D00d237016945Dfff owner?",
-            account.isOwnerAddress(0xC1200B5147ba1a0348b8462D00d237016945Dfff)
-        );
         console2.log(
             "is newOwner 0x5Ad3b55625553CEf54D7561cD256658537d54AAd owner?",
             account.isOwnerAddress(0x5Ad3b55625553CEf54D7561cD256658537d54AAd)
         );
-        console2.log("keyServiceEmitter", account.keyServiceEmitter());
         console2.log(
             "account.REPLAYABLE_NONCE_KEY()",
             account.REPLAYABLE_NONCE_KEY()
         );
-        console2.log("userOpNonce", userOpNonce + 1);
 
         console2.log(
             "currentNonce",
