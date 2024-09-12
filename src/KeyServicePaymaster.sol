@@ -79,3 +79,7 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
         return false;
     }
 }
+
+// could validate based on a signature the wallet factory that an address is deployed from
+// on deployment, factory would sign a simple message (wallet address), lineageSignature, that could be verified by the paymaster
+// paymaster would track whether that factory has been approved by owner.
