@@ -8,4 +8,9 @@ interface ICoinbaseSmartWalletFactory {
         bytes[] calldata owners,
         uint256 nonce
     ) external payable returns (CoinbaseSmartWallet account);
+
+    function getAddress(
+        bytes[] calldata owners,
+        uint256 nonce
+    ) external view returns (address);
 }

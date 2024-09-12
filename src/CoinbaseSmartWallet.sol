@@ -60,6 +60,10 @@ contract CoinbaseSmartWallet is
     /// @dev Helps enforce sequential sequencing of replayable transactions.
     uint256 public constant REPLAYABLE_NONCE_KEY = 8453;
 
+    address public deploymentFactoryAddress = address(0);
+    bytes[] public deploymentOwners = new bytes[](0);
+    uint256 public deploymentNonce = 0;
+
     /// @notice Thrown when `initialize` is called but the account already has had at least one owner.
     error Initialized();
 
@@ -139,10 +143,18 @@ contract CoinbaseSmartWallet is
     /// @param owners Array of initial owners for this account. Each item should be
     ///               an ABI encoded Ethereum address, i.e. 32 bytes with 12 leading 0 bytes,
     ///               or a 64 byte public key.
-    function initialize(bytes[] calldata owners) external payable virtual {
+    function initialize(
+        address factoryAddress,
+        bytes[] calldata owners,
+        uint256 nonce
+    ) external payable virtual {
         if (nextOwnerIndex() != 0) {
             revert Initialized();
         }
+
+        deploymentFactoryAddress = factoryAddress;
+        deploymentOwners = owners;
+        deploymentNonce = nonce;
 
         _initializeOwners(owners);
     }

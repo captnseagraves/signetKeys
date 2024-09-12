@@ -36,23 +36,25 @@ contract CoinbaseSmartWalletFactory {
     ///
     /// @return account The address of the ERC-1967 proxy created with inputs `owners`, `nonce`, and
     ///                 `this.implementation`.
-    function createAccount(bytes[] calldata owners, uint256 nonce)
-        external
-        payable
-        virtual
-        returns (CoinbaseSmartWallet account)
-    {
+    function createAccount(
+        bytes[] calldata owners,
+        uint256 nonce
+    ) external payable virtual returns (CoinbaseSmartWallet account) {
         if (owners.length == 0) {
             revert OwnerRequired();
         }
 
-        (bool alreadyDeployed, address accountAddress) =
-            LibClone.createDeterministicERC1967(msg.value, implementation, _getSalt(owners, nonce));
+        (bool alreadyDeployed, address accountAddress) = LibClone
+            .createDeterministicERC1967(
+                msg.value,
+                implementation,
+                _getSalt(owners, nonce)
+            );
 
         account = CoinbaseSmartWallet(payable(accountAddress));
 
         if (!alreadyDeployed) {
-            account.initialize(owners);
+            account.initialize(address(this), owners, nonce);
         }
     }
 
@@ -62,8 +64,16 @@ contract CoinbaseSmartWalletFactory {
     /// @param nonce  The nonce provided to `createAccount()`.
     ///
     /// @return The predicted account deployment address.
-    function getAddress(bytes[] calldata owners, uint256 nonce) external view returns (address) {
-        return LibClone.predictDeterministicAddress(initCodeHash(), _getSalt(owners, nonce), address(this));
+    function getAddress(
+        bytes[] calldata owners,
+        uint256 nonce
+    ) external view returns (address) {
+        return
+            LibClone.predictDeterministicAddress(
+                initCodeHash(),
+                _getSalt(owners, nonce),
+                address(this)
+            );
     }
 
     /// @notice Returns the initialization code hash of the account:
@@ -80,7 +90,10 @@ contract CoinbaseSmartWalletFactory {
     /// @param nonce  The nonce provided to `createAccount()`.
     ///
     /// @return The computed salt.
-    function _getSalt(bytes[] calldata owners, uint256 nonce) internal pure returns (bytes32) {
+    function _getSalt(
+        bytes[] calldata owners,
+        uint256 nonce
+    ) internal pure returns (bytes32) {
         return keccak256(abi.encode(owners, nonce));
     }
 }

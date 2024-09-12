@@ -4,6 +4,8 @@ pragma solidity 0.8.23;
 import {BasePaymaster} from "@account-abstraction/core/BasePaymaster.sol";
 
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
+import {ICoinbaseSmartWalletFactory} from "./ICoinbaseSmartWalletFactory.sol";
+import {ICoinbaseSmartWallet} from "./ICoinbaseSmartWallet.sol";
 
 import {console} from "forge-std/console.sol";
 
@@ -11,6 +13,12 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
     using UserOperationLib for UserOperation;
 
     mapping(address => bool) public validFactories;
+
+    /// @notice Thrown when a call is passed to `executeWithoutChainIdValidation` that is not allowed by
+    ///         `canSkipChainIdValidation`
+    ///
+    /// @param selector The selector of the call.
+    error SelectorNotAllowed(bytes4 selector);
 
     function addFactory(address factory) public onlyOwner {
         validFactories[factory] = true;
@@ -22,8 +30,8 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
 
     function validatePaymasterUserOp(
         UserOperation calldata userOp,
-        bytes32,
-        uint256
+        bytes32 userOpHash,
+        uint256 maxCost
     )
         external
         pure
@@ -33,35 +41,37 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
         context = new bytes(0);
         validationData = 0;
 
-        if (!isValidFunction(selector)) {
-            revert SelectorNotAllowed(selector);
+        // check that the userOp is coming from a valid wallet
+        // check that the wallet was deployed by a valid factory
+
+        // check that the userOp is for a valid function selector
+        if (
+            bytes4(userOp.callData) !=
+            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
+        ) {
+            revert SelectorNotAllowed(bytes4(userOp.callData));
         }
 
-        // check that the paymaster is funded
-        // check that the userOp is for a valid function selector
-        // checkthat the userOp is coming from a valid wallet
-        //
+        address factoryAddress = ICoinbaseSmartWallet(userOp.sender)
+            .deploymentFactoryAddress();
 
-        if (
-            bytes4(userOp.callData) ==
-            this.executeWithoutChainIdValidation.selector
-        ) {
-            emitKeyServiceActionRequest = true;
-            userOpHash = getUserOpHashWithoutChainId(userOp);
+        // owners may be a problematic variables name once ownable is implemented
 
-            console.log(
-                "emitKeyServiceActionRequest",
-                emitKeyServiceActionRequest
-            );
+        bytes[] owners = ICoinbaseSmartWallet(userOp.sender).deploymentOwners();
+        uint256 nonce = ICoinbaseSmartWallet(userOp.sender).deploymentNonce();
 
-            if (key != REPLAYABLE_NONCE_KEY) {
-                revert InvalidNonceKey(key);
-            }
-        } else {
-            if (key == REPLAYABLE_NONCE_KEY) {
-                console.log("not it");
-                revert InvalidNonceKey(key);
-            }
+        // check for a valid factory
+        if (!validFactories[factoryAddress]) {
+            revert InvalidFactory(factoryAddress);
+        }
+
+        // call factory.getAddress() to check deterministic account address
+        address accountAddress = ICoinbaseSmartWalletFactory(factoryAddress)
+            .getAddress(owners, nonce);
+
+        // check that account was deployed by factory
+        if (accountAddress != userOp.sender) {
+            revert InvalidAccount(userOp.sender);
         }
     }
 
