@@ -10,6 +10,16 @@ import {console} from "forge-std/console.sol";
 contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
     using UserOperationLib for UserOperation;
 
+    mapping(address => bool) public validFactories;
+
+    function addFactory(address factory) public onlyOwner {
+        validFactories[factory] = true;
+    }
+
+    function removeFactory(address factory) public onlyOwner {
+        validFactories[factory] = false;
+    }
+
     function validatePaymasterUserOp(
         UserOperation calldata userOp,
         bytes32,
@@ -23,12 +33,14 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
         context = new bytes(0);
         validationData = 0;
 
-        if (!canSkipChainIdValidation(selector)) {
+        if (!isValidFunction(selector)) {
             revert SelectorNotAllowed(selector);
         }
 
-        // this function needs to check that the paymaster is funded
-        // and that the userOp is for a valid function selector
+        // check that the paymaster is funded
+        // check that the userOp is for a valid function selector
+        // checkthat the userOp is coming from a valid wallet
+        //
 
         if (
             bytes4(userOp.callData) ==
@@ -59,12 +71,12 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
         uint256 actualGasCost
     ) external override {}
 
-    /// @notice Returns whether `functionSelector` can be called in `executeWithoutChainIdValidation`.
+    /// @notice Returns whether `functionSelector` can be paid for by the paymaster.
     ///
     /// @param functionSelector The function selector to check.
     ////
-    /// @return `true` is the function selector is allowed to skip the chain ID validation, else `false`.
-    function canSkipChainIdValidation(
+    /// @return `true` is the function selector is allowed by paymaster, else `false`.
+    function isValidFunction(
         bytes4 functionSelector
     ) public pure returns (bool) {
         if (
@@ -83,3 +95,5 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
 // could validate based on a signature the wallet factory that an address is deployed from
 // on deployment, factory would sign a simple message (wallet address), lineageSignature, that could be verified by the paymaster
 // paymaster would track whether that factory has been approved by owner.
+
+// could also validate based on nonce and create2 style deployment scheme, if the allet is tracking the nonce, etc but not sure there is robust enugh context
