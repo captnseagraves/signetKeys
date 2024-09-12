@@ -2,16 +2,20 @@
 pragma solidity 0.8.23;
 
 import {BasePaymaster} from "account-abstraction/core/BasePaymaster.sol";
+import {UserOperation, UserOperationLib} from "account-abstraction/interfaces/UserOperation.sol";
+import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
+import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
+import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 import {ICoinbaseSmartWalletFactory} from "./ICoinbaseSmartWalletFactory.sol";
 import {ICoinbaseSmartWallet} from "./ICoinbaseSmartWallet.sol";
+import {CoinbaseSmartWallet} from "./CoinbaseSmartWallet.sol";
+import {MultiOwnable} from "./MultiOwnable.sol";
 
 import {console} from "forge-std/console.sol";
 
-contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
-    using UserOperationLib for UserOperation;
-
+contract KeyServicePaymaster is BasePaymaster {
     mapping(address => bool) public validFactories;
 
     /// @notice Thrown when a call is passed to `executeWithoutChainIdValidation` that is not allowed by
@@ -19,6 +23,26 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
     ///
     /// @param selector The selector of the call.
     error SelectorNotAllowed(bytes4 selector);
+
+    error InvalidFactory(address factory);
+
+    error InvalidAccount(address account);
+
+    error InvalidEntryPoint();
+
+    /// @notice Constructor for the paymaster setting the entrypoint, verifyingSigner and owner
+    ///
+    /// @param entryPoint the entrypoint contract
+    constructor(
+        IEntryPoint entryPoint,
+        address initialOwner
+    ) BasePaymaster(entryPoint) Ownable2Step() {
+        if (address(entryPoint).code.length == 0) {
+            revert InvalidEntryPoint();
+        }
+
+        _transferOwnership(initialOwner);
+    }
 
     function addFactory(address factory) public onlyOwner {
         validFactories[factory] = true;
@@ -28,16 +52,11 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
         validFactories[factory] = false;
     }
 
-    function validatePaymasterUserOp(
+    function _validatePaymasterUserOp(
         UserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 maxCost
-    )
-        external
-        pure
-        override
-        returns (bytes memory context, uint256 validationData)
-    {
+    ) internal override returns (bytes memory context, uint256 validationData) {
         context = new bytes(0);
         validationData = 0;
 
@@ -57,7 +76,8 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
 
         // owners may be a problematic variables name once ownable is implemented
 
-        bytes[] owners = ICoinbaseSmartWallet(userOp.sender).deploymentOwners();
+        bytes[] memory owners = ICoinbaseSmartWallet(userOp.sender)
+            .deploymentOwners();
         uint256 nonce = ICoinbaseSmartWallet(userOp.sender).deploymentNonce();
 
         // check for a valid factory
@@ -75,11 +95,11 @@ contract KeyServicePaymaster is BasePaymaster, Ownable2Step {
         }
     }
 
-    function postOp(
+    function _postOp(
         PostOpMode mode,
         bytes calldata context,
         uint256 actualGasCost
-    ) external override {}
+    ) internal pure override {}
 
     /// @notice Returns whether `functionSelector` can be paid for by the paymaster.
     ///
