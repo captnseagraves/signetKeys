@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.23;
 
-import {BasePaymaster} from "@account-abstraction/core/BasePaymaster.sol";
+import {BasePaymaster} from "account-abstraction/core/BasePaymaster.sol";
 
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 import {ICoinbaseSmartWalletFactory} from "./ICoinbaseSmartWalletFactory.sol";
