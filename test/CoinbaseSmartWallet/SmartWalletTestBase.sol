@@ -45,7 +45,7 @@ contract SmartWalletTestBase is Test {
         bytecode = address(account).code;
         owners.push(abi.encode(signer));
         owners.push(passkeyOwner);
-        account.initialize(owners);
+        account.initialize(address(this), owners, 0);
 
         console.log("account", address(account));
     }

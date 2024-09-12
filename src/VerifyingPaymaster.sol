@@ -7,6 +7,7 @@ import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
 import {UserOperation, UserOperationLib} from "account-abstraction/interfaces/UserOperation.sol";
 import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 import {FixedPointMathLib} from "solady/utils/FixedPointMathLib.sol";
 
 import {ERC20} from "solmate/tokens/ERC20.sol";
@@ -164,7 +165,7 @@ contract VerifyingPaymaster is BasePaymaster, Ownable2Step {
         IEntryPoint entryPoint,
         address initialVerifyingSigner,
         address initialOwner
-    ) BasePaymaster(entryPoint) Ownable2Step() {
+    ) BasePaymaster(entryPoint) Ownable(initialOwner) {
         if (address(entryPoint).code.length == 0) {
             revert InvalidEntryPoint();
         }
@@ -292,7 +293,7 @@ contract VerifyingPaymaster is BasePaymaster, Ownable2Step {
         }
 
         // Check signature is correct
-        bytes32 hash = ECDSA.toEthSignedMessageHash(
+        bytes32 hash = MessageHashUtils.toEthSignedMessageHash(
             getHash(userOp, paymasterData)
         );
         address signedBy = ECDSA.recover(hash, signature);

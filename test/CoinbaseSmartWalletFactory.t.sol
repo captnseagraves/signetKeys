@@ -19,14 +19,22 @@ contract CoinbaseSmartWalletFactoryTest is Test {
         owners.push(abi.encode(address(2)));
     }
 
-    function test_constructor_setsImplementation(address implementation) public {
+    function test_constructor_setsImplementation(
+        address implementation
+    ) public {
         factory = new CoinbaseSmartWalletFactory(implementation);
         assertEq(factory.implementation(), implementation);
     }
 
     function test_createAccountSetsOwnersCorrectly() public {
         address expectedAddress = factory.getAddress(owners, 0);
-        vm.expectCall(expectedAddress, abi.encodeCall(CoinbaseSmartWallet.initialize, (owners)));
+        vm.expectCall(
+            expectedAddress,
+            abi.encodeCall(
+                CoinbaseSmartWallet.initialize,
+                (address(this), owners, 0)
+            )
+        );
         CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(owners, 0);
         assert(a.isOwnerAddress(address(1)));
         assert(a.isOwnerAddress(address(2)));
@@ -41,7 +49,14 @@ contract CoinbaseSmartWalletFactoryTest is Test {
 
     function test_exitIfAccountIsAlreadyInitialized() public {
         CoinbaseSmartWallet a = factory.createAccount(owners, 0);
-        vm.expectCall(address(a), abi.encodeCall(CoinbaseSmartWallet.initialize, (owners)), 0);
+        vm.expectCall(
+            address(a),
+            abi.encodeCall(
+                CoinbaseSmartWallet.initialize,
+                (address(this), owners, 0)
+            ),
+            0
+        );
         CoinbaseSmartWallet a2 = factory.createAccount(owners, 0);
         assertEq(address(a), address(a2));
     }
@@ -49,7 +64,12 @@ contract CoinbaseSmartWalletFactoryTest is Test {
     function test_RevertsIfLength32ButLargerThanAddress() public {
         bytes memory badOwner = abi.encode(uint256(type(uint160).max) + 1);
         owners.push(badOwner);
-        vm.expectRevert(abi.encodeWithSelector(MultiOwnable.InvalidEthereumAddressOwner.selector, badOwner));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                MultiOwnable.InvalidEthereumAddressOwner.selector,
+                badOwner
+            )
+        );
         factory.createAccount{value: 1e18}(owners, 0);
     }
 
@@ -59,7 +79,9 @@ contract CoinbaseSmartWalletFactoryTest is Test {
         assertEq(address(a), p);
     }
 
-    function test_CreateAccount_ReturnsPredeterminedAddress_WhenAccountAlreadyExists() public {
+    function test_CreateAccount_ReturnsPredeterminedAddress_WhenAccountAlreadyExists()
+        public
+    {
         address p = factory.getAddress(owners, 0);
         CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(owners, 0);
         CoinbaseSmartWallet b = factory.createAccount{value: 1e18}(owners, 0);

@@ -5,7 +5,7 @@ import {BasePaymaster} from "account-abstraction/core/BasePaymaster.sol";
 import {UserOperation, UserOperationLib} from "account-abstraction/interfaces/UserOperation.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
-import {Ownable, Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
 import {ICoinbaseSmartWalletFactory} from "./ICoinbaseSmartWalletFactory.sol";
@@ -36,7 +36,7 @@ contract KeyServicePaymaster is BasePaymaster {
     constructor(
         IEntryPoint entryPoint,
         address initialOwner
-    ) BasePaymaster(entryPoint) Ownable2Step() {
+    ) BasePaymaster(entryPoint) Ownable(initialOwner) {
         if (address(entryPoint).code.length == 0) {
             revert InvalidEntryPoint();
         }
