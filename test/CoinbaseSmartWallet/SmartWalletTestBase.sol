@@ -42,10 +42,10 @@ contract SmartWalletTestBase is Test {
         );
 
         account = new MockCoinbaseSmartWallet();
-        bytecode = address(account).code;
         owners.push(abi.encode(signer));
         owners.push(passkeyOwner);
         account.initialize(address(this), owners, 0);
+        bytecode = address(account).code;
 
         console.log("account", address(account));
     }
@@ -54,6 +54,15 @@ contract SmartWalletTestBase is Test {
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
         entryPoint.handleOps(ops, payable(bundler));
+
+        try entryPoint.handleOps(ops, payable(bundler)) {
+            console.log("Transaction executed successfully");
+        } catch Error(string memory reason) {
+            console.log("Transaction failed with reason:", reason);
+        } catch (bytes memory lowLevelData) {
+            console.log("Transaction failed with low-level error");
+            console.logBytes(lowLevelData);
+        }
     }
 
     function _getUserOp() internal view returns (UserOperation memory userOp) {

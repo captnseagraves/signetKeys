@@ -32,7 +32,7 @@ contract CoinbaseSmartWalletFactoryTest is Test {
             expectedAddress,
             abi.encodeCall(
                 CoinbaseSmartWallet.initialize,
-                (address(this), owners, 0)
+                (address(factory), owners, 0)
             )
         );
         CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(owners, 0);
@@ -53,7 +53,7 @@ contract CoinbaseSmartWalletFactoryTest is Test {
             address(a),
             abi.encodeCall(
                 CoinbaseSmartWallet.initialize,
-                (address(this), owners, 0)
+                (address(factory), owners, 0)
             ),
             0
         );
