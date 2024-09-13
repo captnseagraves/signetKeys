@@ -1,5 +1,6 @@
 [profile.default]
-solc_version = "0.8.19"
+solc_version = "0.8.23"
+solc = "0.8.23"
 src = "src"
 out = "out"
 libs = ["lib"]
@@ -11,3 +12,6 @@ optimizer_runs = 999999
 [fmt]
 sort_imports = true
 wrap_comments = true
+
+[profile.lib]
+account-abstraction = { git = "https://github.com/eth-infinitism/account-abstraction.git", tag = "v0.6.0" }
