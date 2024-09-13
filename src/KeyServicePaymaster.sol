@@ -36,7 +36,7 @@ contract KeyServicePaymaster is BasePaymaster {
     constructor(
         IEntryPoint entryPoint,
         address initialOwner
-    ) BasePaymaster(entryPoint) {
+    ) BasePaymaster(entryPoint) Ownable(initialOwner) {
         if (address(entryPoint).code.length == 0) {
             revert InvalidEntryPoint();
         }
@@ -54,9 +54,14 @@ contract KeyServicePaymaster is BasePaymaster {
 
     function _validatePaymasterUserOp(
         UserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 maxCost
-    ) internal returns (bytes memory context, uint256 validationData) {
+        bytes32,
+        uint256
+    )
+        internal
+        view
+        override
+        returns (bytes memory context, uint256 validationData)
+    {
         context = new bytes(0);
         validationData = 0;
 
@@ -99,7 +104,7 @@ contract KeyServicePaymaster is BasePaymaster {
         PostOpMode mode,
         bytes calldata context,
         uint256 actualGasCost
-    ) internal pure {}
+    ) internal pure override {}
 
     /// @notice Returns whether `functionSelector` can be paid for by the paymaster.
     ///

@@ -165,7 +165,7 @@ contract VerifyingPaymaster is BasePaymaster, Ownable2Step {
         IEntryPoint entryPoint,
         address initialVerifyingSigner,
         address initialOwner
-    ) BasePaymaster(entryPoint) {
+    ) BasePaymaster(entryPoint) Ownable(initialOwner) {
         if (address(entryPoint).code.length == 0) {
             revert InvalidEntryPoint();
         }
@@ -281,7 +281,7 @@ contract VerifyingPaymaster is BasePaymaster, Ownable2Step {
         UserOperation calldata userOp,
         bytes32 userOpHash,
         uint256 maxCost
-    ) internal returns (bytes memory context, uint256 validationData) {
+    ) internal override returns (bytes memory context, uint256 validationData) {
         (
             PaymasterData memory paymasterData,
             bytes memory signature
@@ -377,7 +377,7 @@ contract VerifyingPaymaster is BasePaymaster, Ownable2Step {
         PostOpMode mode,
         bytes calldata context,
         uint256 actualGasCost
-    ) internal {
+    ) internal override {
         PostOpContextData memory c = abi.decode(context, (PostOpContextData));
 
         // Reject if should restrict bundlers and bundler not on allowlist to prevent siphoning of funds

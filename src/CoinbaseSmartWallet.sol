@@ -145,7 +145,7 @@ contract CoinbaseSmartWallet is
     ///               or a 64 byte public key.
     function initialize(
         address factoryAddress,
-        bytes[] calldata owners,
+        bytes[] memory owners,
         uint256 nonce
     ) external payable virtual {
         if (nextOwnerIndex() != 0) {

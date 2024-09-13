@@ -37,7 +37,7 @@ contract CoinbaseSmartWalletFactory {
     /// @return account The address of the ERC-1967 proxy created with inputs `owners`, `nonce`, and
     ///                 `this.implementation`.
     function createAccount(
-        bytes[] calldata owners,
+        bytes[] memory owners,
         uint256 nonce
     ) external payable virtual returns (CoinbaseSmartWallet account) {
         if (owners.length == 0) {
@@ -91,7 +91,7 @@ contract CoinbaseSmartWalletFactory {
     ///
     /// @return The computed salt.
     function _getSalt(
-        bytes[] calldata owners,
+        bytes[] memory owners,
         uint256 nonce
     ) internal pure returns (bytes32) {
         return keccak256(abi.encode(owners, nonce));
