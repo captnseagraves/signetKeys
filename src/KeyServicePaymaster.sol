@@ -65,6 +65,8 @@ contract KeyServicePaymaster is BasePaymaster {
         context = new bytes(0);
         validationData = 0;
 
+        console.log("in the paymaster");
+
         // check that the userOp is coming from a valid wallet
         // check that the wallet was deployed by a valid factory
 
@@ -126,9 +128,3 @@ contract KeyServicePaymaster is BasePaymaster {
         return false;
     }
 }
-
-// could validate based on a signature the wallet factory that an address is deployed from
-// on deployment, factory would sign a simple message (wallet address), lineageSignature, that could be verified by the paymaster
-// paymaster would track whether that factory has been approved by owner.
-
-// could also validate based on nonce and create2 style deployment scheme, if the allet is tracking the nonce, etc but not sure there is robust enugh context

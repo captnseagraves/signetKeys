@@ -29,6 +29,11 @@ contract TestExecuteWithoutChainIdValidation is
     }
 
     function test_succeeds_whenSelectorAllowed() public {
+        console.log(
+            "balance before",
+            address(0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f).balance
+        );
+
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
         assertTrue(account.canSkipChainIdValidation(selector));
         address newOwner = address(6);

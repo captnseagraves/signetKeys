@@ -60,6 +60,8 @@ contract CoinbaseSmartWallet is
     /// @dev Helps enforce sequential sequencing of replayable transactions.
     uint256 public constant REPLAYABLE_NONCE_KEY = 8453;
 
+    /// v0.2.0 variables added to support factory parent identification
+
     address public deploymentFactoryAddress = address(0);
     bytes[] public deploymentOwners = new bytes[](0);
     uint256 public deploymentNonce = 0;
@@ -222,10 +224,6 @@ contract CoinbaseSmartWallet is
         if (_isValidSignature(userOpHash, userOp.signature)) {
             console.log("after");
             if (emitKeyServiceActionRequest) {
-                // call centralized key service emitter function
-                // event is emitted via a centralized service so only need n relayers per blockchain instead of n^n
-                // relayers per wallet per blockchain
-
                 IKeyServiceEmitter(keyServiceEmitter()).emitActionRequest(
                     userOp.sender,
                     userOp

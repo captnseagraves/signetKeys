@@ -27,6 +27,7 @@ contract SmartWalletTestBase is Test {
     // userOp values
     uint256 userOpNonce;
     bytes userOpCalldata;
+    bytes userOpPaymasterAndData;
 
     bytes bytecode;
 
@@ -50,7 +51,7 @@ contract SmartWalletTestBase is Test {
         console.log("account", address(account));
     }
 
-    function _sendUserOperation(UserOperation memory userOp) internal {
+    function _sendUserOperation(UserOperation memory userOp) internal virtual {
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
         entryPoint.handleOps(ops, payable(bundler));
@@ -65,7 +66,12 @@ contract SmartWalletTestBase is Test {
         }
     }
 
-    function _getUserOp() internal view returns (UserOperation memory userOp) {
+    function _getUserOp()
+        internal
+        view
+        virtual
+        returns (UserOperation memory userOp)
+    {
         userOp = UserOperation({
             sender: address(account),
             nonce: userOpNonce,
@@ -84,6 +90,7 @@ contract SmartWalletTestBase is Test {
     function _getUserOpWithSignature()
         internal
         view
+        virtual
         returns (UserOperation memory userOp)
     {
         userOp = _getUserOp();
