@@ -10,13 +10,18 @@ contract TestUpgradeToAndCall is SmartWalletTestBase {
 
     function setUp() public override {
         super.setUp();
-        CoinbaseSmartWalletFactory factory = new CoinbaseSmartWalletFactory(address(new CoinbaseSmartWallet()));
-        account = factory.createAccount(owners, 1);
+        CoinbaseSmartWalletFactory factory = new CoinbaseSmartWalletFactory(
+            address(new CoinbaseSmartWallet())
+        );
+        account = factory.createAccount(owners, 1, address(entryPoint));
         vm.startPrank(signer);
     }
 
     function testUpgradeToAndCall() public {
-        account.upgradeToAndCall(newImplementation, abi.encodeWithSignature("dummy()"));
+        account.upgradeToAndCall(
+            newImplementation,
+            abi.encodeWithSignature("dummy()")
+        );
         Dummy(address(account)).dummy();
     }
 }

@@ -66,6 +66,12 @@ contract CoinbaseSmartWallet is
     bytes[] public deploymentOwners = new bytes[](0);
     uint256 public deploymentNonce = 0;
 
+    address public entrypointAddress = address(0);
+
+    function getDeploymentOwners() public view returns (bytes[] memory) {
+        return deploymentOwners;
+    }
+
     /// @notice Thrown when `initialize` is called but the account already has had at least one owner.
     error Initialized();
 
@@ -148,15 +154,21 @@ contract CoinbaseSmartWallet is
     function initialize(
         address factoryAddress,
         bytes[] memory owners,
-        uint256 nonce
+        uint256 nonce,
+        address _entrypoint
     ) external payable virtual {
         if (nextOwnerIndex() != 0) {
             revert Initialized();
         }
 
+        console.log("in account initialize facotry address", factoryAddress);
+
         deploymentFactoryAddress = factoryAddress;
         deploymentOwners = owners;
         deploymentNonce = nonce;
+
+        // revert back to hardcoded address once testing complete
+        entrypointAddress = _entrypoint;
 
         _initializeOwners(owners);
     }
@@ -249,8 +261,12 @@ contract CoinbaseSmartWallet is
     function executeWithoutChainIdValidation(
         bytes[] calldata calls
     ) external payable virtual onlyEntryPoint {
+        console.log("Executing without chain ID validation");
+
         for (uint256 i; i < calls.length; i++) {
             bytes calldata call = calls[i];
+            console.log("Executing call");
+
             bytes4 selector = bytes4(call);
             if (!canSkipChainIdValidation(selector)) {
                 revert SelectorNotAllowed(selector);
@@ -292,7 +308,7 @@ contract CoinbaseSmartWallet is
     ///
     /// @return The address of the EntryPoint v0.6
     function entryPoint() public view virtual returns (address) {
-        return 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
+        return entrypointAddress;
     }
 
     /// @notice Returns the address of the KeyServiceEmitter v0.1

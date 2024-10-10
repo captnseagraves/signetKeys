@@ -4,6 +4,8 @@ pragma solidity ^0.8.4;
 import {CoinbaseSmartWallet} from "./CoinbaseSmartWallet.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 
+import "forge-std/console.sol";
+
 /// @title Coinbase Smart Wallet Factory
 ///
 /// @notice CoinbaseSmartWallet factory, based on Solady's ERC4337Factory.
@@ -38,7 +40,8 @@ contract CoinbaseSmartWalletFactory {
     ///                 `this.implementation`.
     function createAccount(
         bytes[] memory owners,
-        uint256 nonce
+        uint256 nonce,
+        address _entrypoint
     ) external payable virtual returns (CoinbaseSmartWallet account) {
         if (owners.length == 0) {
             revert OwnerRequired();
@@ -54,7 +57,8 @@ contract CoinbaseSmartWalletFactory {
         account = CoinbaseSmartWallet(payable(accountAddress));
 
         if (!alreadyDeployed) {
-            account.initialize(address(this), owners, nonce);
+            console.log("initializing factory", address(this));
+            account.initialize(address(this), owners, nonce, _entrypoint);
         }
     }
 

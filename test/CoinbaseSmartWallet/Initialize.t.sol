@@ -12,6 +12,6 @@ contract TestInitialize is SmartWalletTestBase {
     function test_cannotInitImplementation() public {
         account = new CoinbaseSmartWallet();
         vm.expectRevert(CoinbaseSmartWallet.Initialized.selector);
-        account.initialize(address(this), owners, 0);
+        account.initialize(address(this), owners, 0, address(entryPoint));
     }
 }

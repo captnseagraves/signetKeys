@@ -5,25 +5,41 @@ import "../CoinbaseSmartWallet/SmartWalletTestBase.sol";
 
 import "../../src/KeyServiceEmitter.sol";
 import "../../src/KeyServicePaymaster.sol";
+import {CoinbaseSmartWalletFactory} from "../../src/CoinbaseSmartWalletFactory.sol";
 
 import {console} from "forge-std/console.sol";
 
 contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
     KeyServicePaymaster public paymaster;
+    CoinbaseSmartWalletFactory factory;
+    CoinbaseSmartWallet implementationAccount;
+    CoinbaseSmartWallet createdAccount;
 
     bytes[] calls;
 
     function setUp() public override {
         super.setUp();
 
+        implementationAccount = new CoinbaseSmartWallet();
+        factory = new CoinbaseSmartWalletFactory(
+            address(implementationAccount)
+        );
         paymaster = new KeyServicePaymaster(entryPoint, signer);
+        createdAccount = factory.createAccount(owners, 0, address(entryPoint));
 
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
         );
 
-        userOpPaymasterAndData = abi.encode(address(paymaster));
+        console.log("paymaster address", address(paymaster));
+
+        console.log("factory address", address(factory));
+
+        vm.startPrank(signer);
+        paymaster.addFactory(address(factory));
+        vm.stopPrank();
+        userOpPaymasterAndData = abi.encodePacked(address(paymaster));
 
         vm.deal(signer, 1 ether);
     }
@@ -36,10 +52,15 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
         paymaster.deposit{value: 1 ether}();
         vm.stopPrank();
 
+        uint256 paymasterBalanceBefore = entryPoint.balanceOf(
+            address(paymaster)
+        );
+        console.log("paymaster balance before", paymasterBalanceBefore);
+
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
-        assertTrue(account.canSkipChainIdValidation(selector));
+        assertTrue(createdAccount.canSkipChainIdValidation(selector));
         address newOwner = address(6);
-        assertFalse(account.isOwnerAddress(newOwner));
+        assertFalse(createdAccount.isOwnerAddress(newOwner));
 
         calls.push(abi.encodeWithSelector(selector, newOwner));
         userOpCalldata = abi.encodeWithSelector(
@@ -49,12 +70,19 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
 
         vm.expectEmit(true, true, false, false);
         emit KeyServiceActionRequest(
-            address(account),
+            address(createdAccount),
             _getUserOpWithSignature()
         );
 
         _sendUserOperation(_getUserOpWithSignature());
-        // assertTrue(account.isOwnerAddress(newOwner));
+        assertTrue(createdAccount.isOwnerAddress(newOwner));
+
+        uint256 paymasterBalanceAfter = entryPoint.balanceOf(
+            address(paymaster)
+        );
+        console.log("paymaster balance after", paymasterBalanceAfter);
+
+        assertTrue(paymasterBalanceAfter != paymasterBalanceBefore);
     }
 
     function _sendUserOperation(UserOperation memory userOp) internal override {
@@ -79,13 +107,13 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
         returns (UserOperation memory userOp)
     {
         userOp = UserOperation({
-            sender: address(account),
+            sender: address(createdAccount),
             nonce: userOpNonce,
             initCode: "",
             callData: userOpCalldata,
-            callGasLimit: uint256(1_000_000),
-            verificationGasLimit: uint256(1_000_000),
-            preVerificationGas: uint256(0),
+            callGasLimit: uint256(2_000_000),
+            verificationGasLimit: uint256(2_000_000),
+            preVerificationGas: uint256(100_000),
             maxFeePerGas: uint256(0),
             maxPriorityFeePerGas: uint256(0),
             paymasterAndData: userOpPaymasterAndData,
