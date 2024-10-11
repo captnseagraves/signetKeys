@@ -6,6 +6,8 @@ interface ICoinbaseSmartWallet {
 
     function deploymentFactoryAddress() external view returns (address);
 
+    function deploymentOwners() external view returns (bytes[] memory);
+
     function getDeploymentOwners() external view returns (bytes[] memory);
 
     function deploymentNonce() external view returns (uint256);

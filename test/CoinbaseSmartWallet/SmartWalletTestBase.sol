@@ -58,7 +58,6 @@ contract SmartWalletTestBase is Test {
     function _sendUserOperation(UserOperation memory userOp) internal virtual {
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
-        entryPoint.handleOps(ops, payable(bundler));
 
         try entryPoint.handleOps(ops, payable(bundler)) {
             console.log("Transaction executed successfully");

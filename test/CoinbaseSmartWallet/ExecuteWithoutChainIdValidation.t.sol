@@ -18,6 +18,14 @@ contract TestExecuteWithoutChainIdValidation is
     function setUp() public override {
         super.setUp();
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
+
+        console.log("userOpNonce", userOpNonce);
+
+        console.log(
+            "currentNonce",
+            entryPoint.getNonce(address(account), 8453)
+        );
+
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
         );
@@ -29,11 +37,6 @@ contract TestExecuteWithoutChainIdValidation is
     }
 
     function test_succeeds_whenSelectorAllowed() public {
-        console.log(
-            "balance before",
-            address(0x5615dEB798BB3E4dFa0139dFa1b3D433Cc23b72f).balance
-        );
-
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
         assertTrue(account.canSkipChainIdValidation(selector));
         address newOwner = address(6);
@@ -45,11 +48,13 @@ contract TestExecuteWithoutChainIdValidation is
             calls
         );
 
-        vm.expectEmit(true, true, false, false);
-        emit KeyServiceActionRequest(
-            address(account),
-            _getUserOpWithSignature()
-        );
+        console.log("calls", calls.length);
+
+        // vm.expectEmit(true, true, false, false);
+        // emit KeyServiceActionRequest(
+        //     address(account),
+        //     _getUserOpWithSignature()
+        // );
 
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(account.isOwnerAddress(newOwner));

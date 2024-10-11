@@ -25,6 +25,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
     function setUp() public override {
         super.setUp();
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
+
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
         );

@@ -67,8 +67,6 @@ contract KeyServicePaymaster is BasePaymaster {
         context = new bytes(0);
         validationData = 0;
 
-        console.log("in the paymaster");
-
         // check that the userOp is coming from a valid wallet
         // check that the wallet was deployed by a valid factory
 
@@ -80,43 +78,29 @@ contract KeyServicePaymaster is BasePaymaster {
             revert SelectorNotAllowed(bytes4(userOp.callData));
         }
 
-        console.log("in the paymaster 2");
-
         address factoryAddress = ICoinbaseSmartWallet(userOp.sender)
             .deploymentFactoryAddress();
 
         // owners may be a problematic variables name once ownable is implemented
 
-        console.log("in the paymaster before owners", factoryAddress);
-
         bytes[] memory owners = ICoinbaseSmartWallet(userOp.sender)
             .getDeploymentOwners();
 
-        console.log("in the paymaster before nonce");
-
         uint256 nonce = ICoinbaseSmartWallet(userOp.sender).deploymentNonce();
-
-        console.log("in the paymaster 3");
 
         // check for a valid factory
         if (!validFactories[factoryAddress]) {
             revert InvalidFactory(factoryAddress);
         }
 
-        console.log("in the paymaster 4");
-
         // call factory.getAddress() to check deterministic account address
         address accountAddress = ICoinbaseSmartWalletFactory(factoryAddress)
             .getAddress(owners, nonce);
-
-        console.log("in the paymaster 5");
 
         // check that account was deployed by factory
         if (accountAddress != userOp.sender) {
             revert InvalidAccount(userOp.sender);
         }
-
-        console.log("in the paymaster 6");
     }
 
     function _postOp(
