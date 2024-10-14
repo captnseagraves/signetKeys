@@ -66,8 +66,6 @@ contract CoinbaseSmartWallet is
     bytes[] public deploymentOwners = new bytes[](0);
     uint256 public deploymentNonce = 0;
 
-    address public entrypointAddress = address(0);
-
     function getDeploymentOwners() public view returns (bytes[] memory) {
         return deploymentOwners;
     }
@@ -154,19 +152,17 @@ contract CoinbaseSmartWallet is
     function initialize(
         address factoryAddress,
         bytes[] memory owners,
-        uint256 nonce,
-        address _entrypoint
+        uint256 nonce
     ) external payable virtual {
         if (nextOwnerIndex() != 0) {
             revert Initialized();
         }
 
+        console.log("in account initialize facotry address", factoryAddress);
+
         deploymentFactoryAddress = factoryAddress;
         deploymentOwners = owners;
         deploymentNonce = nonce;
-
-        // revert back to hardcoded address once testing complete
-        entrypointAddress = _entrypoint;
 
         _initializeOwners(owners);
     }
@@ -239,12 +235,8 @@ contract CoinbaseSmartWallet is
                     userOp
                 );
             }
-            console.log("returning 0 in validate userOp");
-
             return 0;
         }
-
-        console.log("returning 1 in validate userOp");
 
         // Else return 1
         return 1;
@@ -310,7 +302,7 @@ contract CoinbaseSmartWallet is
     ///
     /// @return The address of the EntryPoint v0.6
     function entryPoint() public view virtual returns (address) {
-        return entrypointAddress;
+        return 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
     }
 
     /// @notice Returns the address of the KeyServiceEmitter v0.1
