@@ -19,13 +19,6 @@ contract TestExecuteWithoutChainIdValidation is
         super.setUp();
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
 
-        console.log("userOpNonce", userOpNonce);
-
-        console.log(
-            "currentNonce",
-            entryPoint.getNonce(address(account), 8453)
-        );
-
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
         );
@@ -48,13 +41,11 @@ contract TestExecuteWithoutChainIdValidation is
             calls
         );
 
-        console.log("calls", calls.length);
-
-        // vm.expectEmit(true, true, false, false);
-        // emit KeyServiceActionRequest(
-        //     address(account),
-        //     _getUserOpWithSignature()
-        // );
+        vm.expectEmit(true, true, false, false);
+        emit KeyServiceActionRequest(
+            address(account),
+            _getUserOpWithSignature()
+        );
 
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(account.isOwnerAddress(newOwner));

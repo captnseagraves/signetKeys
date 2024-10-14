@@ -52,21 +52,13 @@ contract SmartWalletTestBase is Test {
         account.initialize(address(this), owners, 0, address(entryPoint));
         bytecode = address(account).code;
 
-        console.log("account", address(account));
+        console.log("anvil deployed account", address(account));
     }
 
     function _sendUserOperation(UserOperation memory userOp) internal virtual {
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = userOp;
-
-        try entryPoint.handleOps(ops, payable(bundler)) {
-            console.log("Transaction executed successfully");
-        } catch Error(string memory reason) {
-            console.log("Transaction failed with reason:", reason);
-        } catch (bytes memory lowLevelData) {
-            console.log("Transaction failed with low-level error");
-            console.logBytes(lowLevelData);
-        }
+        entryPoint.handleOps(ops, payable(bundler));
     }
 
     function _getUserOp()

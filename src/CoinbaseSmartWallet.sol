@@ -161,8 +161,6 @@ contract CoinbaseSmartWallet is
             revert Initialized();
         }
 
-        console.log("in account initialize facotry address", factoryAddress);
-
         deploymentFactoryAddress = factoryAddress;
         deploymentOwners = owners;
         deploymentNonce = nonce;
@@ -241,8 +239,12 @@ contract CoinbaseSmartWallet is
                     userOp
                 );
             }
+            console.log("returning 0 in validate userOp");
+
             return 0;
         }
+
+        console.log("returning 1 in validate userOp");
 
         // Else return 1
         return 1;

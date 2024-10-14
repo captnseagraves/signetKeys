@@ -28,7 +28,6 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
         createdAccount = factory.createAccount(owners, 0, address(entryPoint));
 
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
-        console.log("userOpNonce", userOpNonce);
 
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
@@ -71,20 +70,6 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
         assertTrue(createdAccount.isOwnerAddress(newOwner));
     }
 
-    function _sendUserOperation(UserOperation memory userOp) internal override {
-        UserOperation[] memory ops = new UserOperation[](1);
-        ops[0] = userOp;
-
-        try entryPoint.handleOps(ops, payable(bundler)) {
-            console.log("Transaction executed successfully");
-        } catch Error(string memory reason) {
-            console.log("Transaction failed with reason:", reason);
-        } catch (bytes memory lowLevelData) {
-            console.log("Transaction failed with low-level error");
-            console.logBytes(lowLevelData);
-        }
-    }
-
     function _getUserOp()
         internal
         view
@@ -104,16 +89,6 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
             paymasterAndData: userOpPaymasterAndData,
             signature: ""
         });
-    }
-
-    function _getUserOpWithSignature()
-        internal
-        view
-        override
-        returns (UserOperation memory userOp)
-    {
-        userOp = _getUserOp();
-        userOp.signature = _sign(userOp);
     }
 
     function _sign(

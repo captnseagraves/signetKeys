@@ -101,6 +101,11 @@ contract KeyServicePaymaster is BasePaymaster {
         if (accountAddress != userOp.sender) {
             revert InvalidAccount(userOp.sender);
         }
+
+        console.log(
+            "returned validationData in validate paymaster userOp",
+            validationData
+        );
     }
 
     function _postOp(
