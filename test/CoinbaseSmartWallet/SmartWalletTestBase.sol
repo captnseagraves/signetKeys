@@ -21,9 +21,8 @@ contract SmartWalletTestBase is Test {
         );
     bytes passkeyOwner =
         hex"1c05286fe694493eae33312f2d2e0d0abeda8db76238b7a204be1fb87f54ce4228fef61ef4ac300f631657635c28e59bfb2fe71bce1634c81c65642042f6dc4d";
-    // IEntryPoint entryPoint =
-    //     IEntryPoint(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789);
-    EntryPoint public entryPoint;
+    IEntryPoint entryPoint =
+        IEntryPoint(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789);
     address bundler =
         address(uint160(uint256(keccak256(abi.encodePacked("bundler")))));
 
@@ -46,10 +45,9 @@ contract SmartWalletTestBase is Test {
         );
 
         account = new MockCoinbaseSmartWallet();
-        entryPoint = new EntryPoint();
         owners.push(abi.encode(signer));
         owners.push(passkeyOwner);
-        account.initialize(address(this), owners, 0, address(entryPoint));
+        account.initialize(address(this), owners, 0);
         bytecode = address(account).code;
 
         console.log("anvil deployed account", address(account));

@@ -25,7 +25,7 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
             address(implementationAccount)
         );
         paymaster = new KeyServicePaymaster(entryPoint, signer);
-        createdAccount = factory.createAccount(owners, 0, address(entryPoint));
+        createdAccount = factory.createAccount(owners, 0);
 
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
 

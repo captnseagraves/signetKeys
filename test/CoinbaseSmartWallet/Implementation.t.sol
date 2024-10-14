@@ -14,7 +14,7 @@ contract TestImplementation is SmartWalletTestBase {
         CoinbaseSmartWalletFactory factory = new CoinbaseSmartWalletFactory(
             implementation
         );
-        account = factory.createAccount(owners, 1, address(entryPoint));
+        account = factory.createAccount(owners, 1);
     }
 
     function testImplementation() public {
