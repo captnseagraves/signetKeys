@@ -13,6 +13,4 @@ interface ICoinbaseSmartWalletFactory {
         bytes[] calldata owners,
         uint256 nonce
     ) external view returns (address);
-
-    function implementation() external view returns (address);
 }

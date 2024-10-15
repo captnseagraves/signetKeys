@@ -4,12 +4,8 @@ pragma solidity ^0.8.0;
 import "../CoinbaseSmartWallet/SmartWalletTestBase.sol";
 
 import "../../src/KeyServiceEmitter.sol";
-import "../../src/IKeyServicePaymaster.sol";
 import "../../src/KeyServicePaymaster.sol";
-import "../../src/ICoinbaseSmartWalletFactory.sol";
-import "../../src/CoinbaseSmartWalletFactory.sol";
-import "../../src/ICoinbaseSmartWallet.sol";
-import "../../src/CoinbaseSmartWallet.sol";
+import {CoinbaseSmartWalletFactory} from "../../src/CoinbaseSmartWalletFactory.sol";
 
 import {console} from "forge-std/console.sol";
 
@@ -17,28 +13,21 @@ contract TestExecuteCrossChainWithoutPaymaster is
     SmartWalletTestBase,
     KeyServiceEmitter
 {
-    // CoinbaseSmartWallet public implementationAccount;
-    // CoinbaseSmartWalletFactory public factory;
-    KeyServicePaymaster public paymaster;
+    EntryPoint public mainnetEntryPoint;
+    KeyServicePaymaster public mainnetPaymaster;
+    CoinbaseSmartWalletFactory public mainnetFactory;
+    CoinbaseSmartWallet public mainnetImplementationAccount;
+    CoinbaseSmartWallet public mainnetCreatedAccount;
 
-    // CoinbaseSmartWallet implementationAccount;
-    ICoinbaseSmartWallet implementationAccount =
-        ICoinbaseSmartWallet(
-            address(0xF62849F9A0B5Bf2913b396098F7c7019b51A820a)
-        );
-
-    ICoinbaseSmartWalletFactory factory =
-        ICoinbaseSmartWalletFactory(
-            address(0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9)
-        );
-
-    // IKeyServicePaymaster paymaster =
-    //     IKeyServicePaymaster(
-    //         address(0x2e234DAe75C793f67A35089C9d99245E1C58470b)
-    //     );
-
-    CoinbaseSmartWallet public createdMainnetAccount;
+    EntryPoint public optimismEntryPoint;
+    KeyServicePaymaster public optimismPaymaster;
+    CoinbaseSmartWalletFactory public optimismFactory;
+    CoinbaseSmartWallet public optimismImplementationAccount;
     CoinbaseSmartWallet public createdOptimismAccount;
+
+    bytes mainnetUserOpPaymasterAndData;
+    bytes optimismUserOpPaymasterAndData;
+
     CoinbaseSmartWallet public createdAccount;
 
     // chain forks for cross chain testing
@@ -57,55 +46,36 @@ contract TestExecuteCrossChainWithoutPaymaster is
             0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
             Static.KEY_SERVICE_EMITTER_BYTES
         );
-
-        // // // setup mainnet implementation account
-        // implementationAccount = new CoinbaseSmartWallet();
-        // // // setup mainnet factory
-        // factory = new CoinbaseSmartWalletFactory(
-        //     address(implementationAccount)
-        // );
-        // // // setup mainnet paymaster
-        paymaster = new KeyServicePaymaster(entryPoint, signer);
+        vm.etch(
+            0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
+            Static.ENTRY_POINT_BYTES
+        );
 
         // setup mainnet implementation account
-        vm.etch(
-            0xF62849F9A0B5Bf2913b396098F7c7019b51A820a,
-            Static.IMPLEMENTATION_ACCOUNT_BYTES
-        );
+        mainnetImplementationAccount = new CoinbaseSmartWallet();
         // setup mainnet factory
-        vm.etch(
-            0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9,
-            Static.INITALIZED_FACTORY_BYTES
+        mainnetFactory = new CoinbaseSmartWalletFactory(
+            address(mainnetImplementationAccount)
         );
         // setup mainnet paymaster
-        // vm.etch(
-        //     0x2e234DAe75C793f67A35089C9d99245E1C58470b,
-        //     Static.PAYMASTER_BYTES
-        // );
-
-        // console.log("implementationAccount bytecode");
-        // console.logBytes(address(implementationAccount).code);
-        // console.log("implementationAccount address");
-        // console.log(address(implementationAccount));
-        // console.log("factory bytecode");
-        // console.logBytes(address(factory).code);
-        // console.log("factory address");
-        // console.log(address(factory));
-        // console.log("paymaster bytecode");
-        // console.logBytes(address(paymaster).code);
-        // console.log("paymaster address");
-        // console.log(address(paymaster));
+        mainnetPaymaster = new KeyServicePaymaster(entryPoint, signer);
 
         // create mainnet account
-        createdMainnetAccount = factory.createAccount(owners, 0);
-
-        // console.log("signer", signer);
-        // console.log("paymaster owner", paymaster.owner());
+        mainnetCreatedAccount = mainnetFactory.createAccount(owners, 0);
 
         // add factory to paymaster
         vm.startPrank(signer);
-        paymaster.addFactory(address(factory));
+        mainnetPaymaster.addFactory(address(mainnetFactory));
         vm.stopPrank();
+
+        // setup mainnet userOpPaymasterAndData
+        mainnetUserOpPaymasterAndData = abi.encodePacked(
+            address(mainnetPaymaster)
+        );
+
+        userOpCalldata = abi.encodeWithSelector(
+            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
+        );
 
         // // setup optimism fork
         // optimismFork = vm.createSelectFork(vm.envString("OPTIMISM_RPC_URL"));
@@ -146,13 +116,13 @@ contract TestExecuteCrossChainWithoutPaymaster is
 
         vm.deal(signer, 1 ether);
         vm.startPrank(signer);
-        paymaster.deposit{value: 1 ether}();
+        mainnetPaymaster.deposit{value: 1 ether}();
         vm.stopPrank();
 
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
-        assertTrue(createdMainnetAccount.canSkipChainIdValidation(selector));
+        assertTrue(mainnetCreatedAccount.canSkipChainIdValidation(selector));
         address newOwner = address(6);
-        assertFalse(createdMainnetAccount.isOwnerAddress(newOwner));
+        assertFalse(mainnetCreatedAccount.isOwnerAddress(newOwner));
 
         calls.push(abi.encodeWithSelector(selector, newOwner));
         userOpCalldata = abi.encodeWithSelector(
@@ -160,14 +130,8 @@ contract TestExecuteCrossChainWithoutPaymaster is
             calls
         );
 
-        // setup mainnet userOpPaymasterAndData
-        userOpPaymasterAndData = abi.encodePacked(address(paymaster));
-
-        userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
-        );
-
-        createdAccount = createdMainnetAccount;
+        createdAccount = mainnetCreatedAccount;
+        userOpPaymasterAndData = mainnetUserOpPaymasterAndData;
         userOpNonce = createdAccount.REPLAYABLE_NONCE_KEY() << 64;
 
         // vm.expectEmit(true, true, false, false);
@@ -177,7 +141,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
         // );
 
         _sendUserOperation(_getUserOpWithSignature());
-        // assertTrue(createdAccount.isOwnerAddress(newOwner));
+        assertTrue(createdAccount.isOwnerAddress(newOwner));
 
         // // duplicate operation on optimismFork
         // vm.selectFork(optimismFork);

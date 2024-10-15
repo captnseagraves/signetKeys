@@ -158,7 +158,7 @@ contract CoinbaseSmartWallet is
             revert Initialized();
         }
 
-        console.log("in account factory address", factoryAddress);
+        console.log("in account initialize facotry address", factoryAddress);
 
         deploymentFactoryAddress = factoryAddress;
         deploymentOwners = owners;
