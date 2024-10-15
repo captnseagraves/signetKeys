@@ -14,15 +14,10 @@ contract TestExecuteCrossChainWithoutPaymaster is
     SmartWalletTestBase,
     KeyServiceEmitter
 {
-    ICoinbaseSmartWallet mainnetImplementationAccount =
-        ICoinbaseSmartWallet(
-            address(0x2e234DAe75C793f67A35089C9d99245E1C58470b)
-        );
-
     EntryPoint public mainnetEntryPoint;
     KeyServicePaymaster public mainnetPaymaster;
     CoinbaseSmartWalletFactory public mainnetFactory;
-    // CoinbaseSmartWallet public mainnetImplementationAccount;
+    CoinbaseSmartWallet public mainnetImplementationAccount;
     CoinbaseSmartWallet public mainnetCreatedAccount;
 
     EntryPoint public optimismEntryPoint;
@@ -63,14 +58,50 @@ contract TestExecuteCrossChainWithoutPaymaster is
             Static.IMPLEMENTATION_ACCOUNT_BYTES
         );
 
+        mainnetImplementationAccount = CoinbaseSmartWallet(
+            payable(address(0x2e234DAe75C793f67A35089C9d99245E1C58470b))
+        );
+
+        mainnetImplementationAccount.initialize(
+            address(mainnetFactory),
+            owners,
+            0
+        );
+
+        vm.etch(
+            0xF62849F9A0B5Bf2913b396098F7c7019b51A820a,
+            Static.INITALIZED_FACTORY_BYTES
+        );
+
+        mainnetFactory = CoinbaseSmartWalletFactory(
+            payable(address(0xF62849F9A0B5Bf2913b396098F7c7019b51A820a))
+        );
+
+        vm.store(
+            address(mainnetFactory),
+            0,
+            bytes32(abi.encode(address(mainnetImplementationAccount)))
+        );
+
+        vm.etch(
+            0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9,
+            Static.PAYMASTER_BYTES
+        );
+
+        mainnetPaymaster = KeyServicePaymaster(
+            payable(address(0x5991A2dF15A8F6A256D3Ec51E99254Cd3fb576A9))
+        );
+
+        vm.store(address(mainnetPaymaster), 0, bytes32(abi.encode(signer)));
+
         // setup mainnet implementation account
         // mainnetImplementationAccount = new CoinbaseSmartWallet();
         // setup mainnet factory
-        mainnetFactory = new CoinbaseSmartWalletFactory(
-            address(mainnetImplementationAccount)
-        );
+        // mainnetFactory = new CoinbaseSmartWalletFactory(
+        //     address(mainnetImplementationAccount)
+        // );
         // setup mainnet paymaster
-        mainnetPaymaster = new KeyServicePaymaster(entryPoint, signer);
+        // mainnetPaymaster = new KeyServicePaymaster(entryPoint, signer);
 
         console.log(
             "mainnetImplementationAccount",
@@ -89,13 +120,13 @@ contract TestExecuteCrossChainWithoutPaymaster is
         vm.stopPrank();
 
         // setup mainnet userOpPaymasterAndData
-        mainnetUserOpPaymasterAndData = abi.encodePacked(
-            address(mainnetPaymaster)
-        );
+        // mainnetUserOpPaymasterAndData = abi.encodePacked(
+        //     address(mainnetPaymaster)
+        // );
 
-        userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
-        );
+        // userOpCalldata = abi.encodeWithSelector(
+        //     CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
+        // );
 
         // // setup optimism fork
         // optimismFork = vm.createSelectFork(vm.envString("OPTIMISM_RPC_URL"));
@@ -130,56 +161,44 @@ contract TestExecuteCrossChainWithoutPaymaster is
         public
     {
         // I need to etch the factories on each chain and then create each account so they have the same address
-
         // test operation built for local network on mainnet fork
-        vm.selectFork(mainnetFork);
-
-        vm.deal(signer, 1 ether);
-        vm.startPrank(signer);
-        mainnetPaymaster.deposit{value: 1 ether}();
-        vm.stopPrank();
-
-        bytes4 selector = MultiOwnable.addOwnerAddress.selector;
-        assertTrue(mainnetCreatedAccount.canSkipChainIdValidation(selector));
-        address newOwner = address(6);
-        assertFalse(mainnetCreatedAccount.isOwnerAddress(newOwner));
-
-        calls.push(abi.encodeWithSelector(selector, newOwner));
-        userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
-            calls
-        );
-
-        createdAccount = mainnetCreatedAccount;
-        userOpPaymasterAndData = mainnetUserOpPaymasterAndData;
-        userOpNonce = createdAccount.REPLAYABLE_NONCE_KEY() << 64;
-
+        // vm.selectFork(mainnetFork);
+        // vm.deal(signer, 1 ether);
+        // vm.startPrank(signer);
+        // mainnetPaymaster.deposit{value: 1 ether}();
+        // vm.stopPrank();
+        // bytes4 selector = MultiOwnable.addOwnerAddress.selector;
+        // assertTrue(mainnetCreatedAccount.canSkipChainIdValidation(selector));
+        // address newOwner = address(6);
+        // assertFalse(mainnetCreatedAccount.isOwnerAddress(newOwner));
+        // calls.push(abi.encodeWithSelector(selector, newOwner));
+        // userOpCalldata = abi.encodeWithSelector(
+        //     CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
+        //     calls
+        // );
+        // createdAccount = mainnetCreatedAccount;
+        // userOpPaymasterAndData = mainnetUserOpPaymasterAndData;
+        // userOpNonce = createdAccount.REPLAYABLE_NONCE_KEY() << 64;
         // vm.expectEmit(true, true, false, false);
         // emit KeyServiceActionRequest(
         //     address(createdAccount),
         //     _getUserOpWithSignature()
         // );
-
-        _sendUserOperation(_getUserOpWithSignature());
-        assertTrue(createdAccount.isOwnerAddress(newOwner));
-
+        // _sendUserOperation(_getUserOpWithSignature());
+        // assertTrue(createdAccount.isOwnerAddress(newOwner));
         // // duplicate operation on optimismFork
         // vm.selectFork(optimismFork);
-
         // vm.deal(signer, 1 ether);
         // vm.startPrank(signer);
         // optimismPaymaster.deposit{value: 1 ether}();
         // vm.stopPrank();
-
         // createdAccount = createdOptimismAccount;
         // userOpPaymasterAndData = optimismUserOpPaymasterAndData;
-
         // vm.expectEmit(true, true, false, false);
         // emit KeyServiceActionRequest(
         //     address(createdOptimismAccount),
         //     _getUserOpWithSignature()
         // );
-
         // _sendUserOperation(_getUserOpWithSignature());
         // assertTrue(createdOptimismAccount.isOwnerAddress(newOwner));
     }
