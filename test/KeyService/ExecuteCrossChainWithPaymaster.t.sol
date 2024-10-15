@@ -6,6 +6,7 @@ import "../CoinbaseSmartWallet/SmartWalletTestBase.sol";
 import "../../src/KeyServiceEmitter.sol";
 import "../../src/KeyServicePaymaster.sol";
 import {CoinbaseSmartWalletFactory} from "../../src/CoinbaseSmartWalletFactory.sol";
+import "../../src/CoinbaseSmartWallet.sol";
 
 import {console} from "forge-std/console.sol";
 
@@ -13,10 +14,15 @@ contract TestExecuteCrossChainWithoutPaymaster is
     SmartWalletTestBase,
     KeyServiceEmitter
 {
+    ICoinbaseSmartWallet mainnetImplementationAccount =
+        ICoinbaseSmartWallet(
+            address(0x2e234DAe75C793f67A35089C9d99245E1C58470b)
+        );
+
     EntryPoint public mainnetEntryPoint;
     KeyServicePaymaster public mainnetPaymaster;
     CoinbaseSmartWalletFactory public mainnetFactory;
-    CoinbaseSmartWallet public mainnetImplementationAccount;
+    // CoinbaseSmartWallet public mainnetImplementationAccount;
     CoinbaseSmartWallet public mainnetCreatedAccount;
 
     EntryPoint public optimismEntryPoint;
@@ -46,13 +52,19 @@ contract TestExecuteCrossChainWithoutPaymaster is
             0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
             Static.KEY_SERVICE_EMITTER_BYTES
         );
+
         vm.etch(
             0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
             Static.ENTRY_POINT_BYTES
         );
 
+        vm.etch(
+            0x2e234DAe75C793f67A35089C9d99245E1C58470b,
+            Static.IMPLEMENTATION_ACCOUNT_BYTES
+        );
+
         // setup mainnet implementation account
-        mainnetImplementationAccount = new CoinbaseSmartWallet();
+        // mainnetImplementationAccount = new CoinbaseSmartWallet();
         // setup mainnet factory
         mainnetFactory = new CoinbaseSmartWalletFactory(
             address(mainnetImplementationAccount)
@@ -60,8 +72,16 @@ contract TestExecuteCrossChainWithoutPaymaster is
         // setup mainnet paymaster
         mainnetPaymaster = new KeyServicePaymaster(entryPoint, signer);
 
-        // create mainnet account
+        console.log(
+            "mainnetImplementationAccount",
+            address(mainnetImplementationAccount)
+        );
+        console.log("mainnetFactory", address(mainnetFactory));
+        console.log("mainnetPaymaster", address(mainnetPaymaster));
+
         mainnetCreatedAccount = mainnetFactory.createAccount(owners, 0);
+
+        // create mainnet account
 
         // add factory to paymaster
         vm.startPrank(signer);
