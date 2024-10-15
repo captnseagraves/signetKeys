@@ -29,10 +29,6 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
 
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
 
-        userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
-        );
-
         vm.startPrank(signer);
         paymaster.addFactory(address(factory));
         vm.stopPrank();
