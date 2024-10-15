@@ -36,10 +36,14 @@ contract CoinbaseSmartWalletFactoryTest is Test {
             expectedAddress,
             abi.encodeCall(
                 CoinbaseSmartWallet.initialize,
-                (address(factory), owners, 0)
+                (address(factory), owners, 0, address(entryPoint))
             )
         );
-        CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(owners, 0);
+        CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(
+            owners,
+            0,
+            address(entryPoint)
+        );
         assert(a.isOwnerAddress(address(1)));
         assert(a.isOwnerAddress(address(2)));
     }
@@ -48,20 +52,28 @@ contract CoinbaseSmartWalletFactoryTest is Test {
         owners.pop();
         owners.pop();
         vm.expectRevert(CoinbaseSmartWalletFactory.OwnerRequired.selector);
-        factory.createAccount{value: 1e18}(owners, 0);
+        factory.createAccount{value: 1e18}(owners, 0, address(entryPoint));
     }
 
     function test_exitIfAccountIsAlreadyInitialized() public {
-        CoinbaseSmartWallet a = factory.createAccount(owners, 0);
+        CoinbaseSmartWallet a = factory.createAccount(
+            owners,
+            0,
+            address(entryPoint)
+        );
         vm.expectCall(
             address(a),
             abi.encodeCall(
                 CoinbaseSmartWallet.initialize,
-                (address(factory), owners, 0)
+                (address(factory), owners, 0, address(entryPoint))
             ),
             0
         );
-        CoinbaseSmartWallet a2 = factory.createAccount(owners, 0);
+        CoinbaseSmartWallet a2 = factory.createAccount(
+            owners,
+            0,
+            address(entryPoint)
+        );
         assertEq(address(a), address(a2));
     }
 
@@ -74,12 +86,16 @@ contract CoinbaseSmartWalletFactoryTest is Test {
                 badOwner
             )
         );
-        factory.createAccount{value: 1e18}(owners, 0);
+        factory.createAccount{value: 1e18}(owners, 0, address(entryPoint));
     }
 
     function test_createAccountDeploysToPredeterminedAddress() public {
         address p = factory.getAddress(owners, 0);
-        CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(owners, 0);
+        CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(
+            owners,
+            0,
+            address(entryPoint)
+        );
         assertEq(address(a), p);
     }
 
@@ -87,15 +103,27 @@ contract CoinbaseSmartWalletFactoryTest is Test {
         public
     {
         address p = factory.getAddress(owners, 0);
-        CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(owners, 0);
-        CoinbaseSmartWallet b = factory.createAccount{value: 1e18}(owners, 0);
+        CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(
+            owners,
+            0,
+            address(entryPoint)
+        );
+        CoinbaseSmartWallet b = factory.createAccount{value: 1e18}(
+            owners,
+            0,
+            address(entryPoint)
+        );
         assertEq(address(a), p);
         assertEq(address(a), address(b));
     }
 
     function testDeployDeterministicPassValues() public {
         vm.deal(address(this), 1e18);
-        CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(owners, 0);
+        CoinbaseSmartWallet a = factory.createAccount{value: 1e18}(
+            owners,
+            0,
+            address(entryPoint)
+        );
         assertEq(address(a).balance, 1e18);
     }
 

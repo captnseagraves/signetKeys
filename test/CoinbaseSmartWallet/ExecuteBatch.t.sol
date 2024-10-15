@@ -51,7 +51,7 @@ contract TestExecuteWithoutChainIdValidation is SmartWalletTestBase, TestPlus {
 
     function testExecuteBatch(uint256 r) public {
         account = new MockCoinbaseSmartWallet();
-        account.initialize(address(this), owners, 0);
+        account.initialize(address(this), owners, 0, address(entryPoint));
         vm.prank(signer);
         account.addOwnerAddress(address(this));
         vm.deal(address(account), 1 ether);

@@ -23,7 +23,7 @@ contract ERC1271Test is Test {
         entryPoint = new EntryPoint();
         owners.push(abi.encode(address(1)));
         owners.push(abi.encode(address(2)));
-        account = factory.createAccount(owners, 0);
+        account = factory.createAccount(owners, 0, address(entryPoint));
     }
 
     function test_returnsExpectedDomainHashWhenProxy() public {
@@ -62,7 +62,7 @@ contract ERC1271Test is Test {
         );
         CoinbaseSmartWallet a = new MockCoinbaseSmartWallet();
         vm.etch(0x2Af621c1B01466256393EBA6BF183Ac2962fd98C, address(a).code);
-        a.initialize(address(this), owners, 0);
+        a.initialize(address(this), owners, 0, address(entryPoint));
         bytes32 expected = 0x1b03b7e3bddbb2f9b5080f154cf33fcbed9b9cd42c98409fb0730369426a0a69;
         bytes32 actual = CoinbaseSmartWallet(
             payable(0x2Af621c1B01466256393EBA6BF183Ac2962fd98C)

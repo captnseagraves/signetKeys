@@ -13,7 +13,7 @@ contract TestUpgradeToAndCall is SmartWalletTestBase {
         CoinbaseSmartWalletFactory factory = new CoinbaseSmartWalletFactory(
             address(new CoinbaseSmartWallet())
         );
-        account = factory.createAccount(owners, 1);
+        account = factory.createAccount(owners, 1, address(entryPoint));
         vm.startPrank(signer);
     }
 

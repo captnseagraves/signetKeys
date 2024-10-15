@@ -38,7 +38,7 @@ contract TestIsValidSignature is SmartWalletTestBase {
 
     function testSmartWalletSigner() public {
         MockCoinbaseSmartWallet otherAccount = new MockCoinbaseSmartWallet();
-        otherAccount.initialize(address(this), owners, 0);
+        otherAccount.initialize(address(this), owners, 0, address(entryPoint));
 
         vm.prank(signer);
         account.addOwnerAddress(address(otherAccount));

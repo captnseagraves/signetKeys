@@ -40,7 +40,8 @@ contract CoinbaseSmartWalletFactory {
     ///                 `this.implementation`.
     function createAccount(
         bytes[] memory owners,
-        uint256 nonce
+        uint256 nonce,
+        address _entrypoint
     ) external payable virtual returns (CoinbaseSmartWallet account) {
         if (owners.length == 0) {
             revert OwnerRequired();
@@ -57,7 +58,7 @@ contract CoinbaseSmartWalletFactory {
 
         if (!alreadyDeployed) {
             console.log("initializing factory", address(this));
-            account.initialize(address(this), owners, nonce);
+            account.initialize(address(this), owners, nonce, _entrypoint);
         }
     }
 

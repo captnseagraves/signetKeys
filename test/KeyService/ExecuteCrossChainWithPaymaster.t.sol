@@ -19,11 +19,11 @@ contract TestExecuteCrossChainWithoutPaymaster is
     CoinbaseSmartWallet public mainnetImplementationAccount;
     CoinbaseSmartWallet public mainnetCreatedAccount;
 
-    EntryPoint public optimismEntryPoint;
-    KeyServicePaymaster public optimismPaymaster;
-    CoinbaseSmartWalletFactory public optimismFactory;
-    CoinbaseSmartWallet public optimismImplementationAccount;
-    CoinbaseSmartWallet public createdOptimismAccount;
+    // EntryPoint public optimismEntryPoint;
+    // KeyServicePaymaster public optimismPaymaster;
+    // CoinbaseSmartWalletFactory public optimismFactory;
+    // CoinbaseSmartWallet public optimismImplementationAccount;
+    // CoinbaseSmartWallet public createdOptimismAccount;
 
     bytes mainnetUserOpPaymasterAndData;
     bytes optimismUserOpPaymasterAndData;
@@ -41,16 +41,8 @@ contract TestExecuteCrossChainWithoutPaymaster is
 
         // setup mainnet fork
         mainnetFork = vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
-        // etch key service emitter
-        vm.etch(
-            0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
-            Static.KEY_SERVICE_EMITTER_BYTES
-        );
-        vm.etch(
-            0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
-            Static.ENTRY_POINT_BYTES
-        );
-
+        // setup mainnet entryPoint
+        mainnetEntryPoint = new EntryPoint();
         // setup mainnet implementation account
         mainnetImplementationAccount = new CoinbaseSmartWallet();
         // setup mainnet factory
@@ -58,20 +50,34 @@ contract TestExecuteCrossChainWithoutPaymaster is
             address(mainnetImplementationAccount)
         );
         // setup mainnet paymaster
-        mainnetPaymaster = new KeyServicePaymaster(entryPoint, signer);
+        mainnetPaymaster = new KeyServicePaymaster(mainnetEntryPoint, signer);
 
         // create mainnet account
-        mainnetCreatedAccount = mainnetFactory.createAccount(owners, 0);
+        mainnetCreatedAccount = mainnetFactory.createAccount(
+            owners,
+            0,
+            address(mainnetEntryPoint)
+        );
 
         // add factory to paymaster
         vm.startPrank(signer);
         mainnetPaymaster.addFactory(address(mainnetFactory));
         vm.stopPrank();
 
+        // etch key service emitter
+        vm.etch(
+            0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
+            Static.KEY_SERVICE_EMITTER_BYTES
+        );
+
         // setup mainnet userOpPaymasterAndData
         mainnetUserOpPaymasterAndData = abi.encodePacked(
             address(mainnetPaymaster)
         );
+
+        account = mainnetCreatedAccount;
+
+        userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
 
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
@@ -130,18 +136,18 @@ contract TestExecuteCrossChainWithoutPaymaster is
             calls
         );
 
+        entryPoint = mainnetEntryPoint;
         createdAccount = mainnetCreatedAccount;
         userOpPaymasterAndData = mainnetUserOpPaymasterAndData;
-        userOpNonce = createdAccount.REPLAYABLE_NONCE_KEY() << 64;
 
-        // vm.expectEmit(true, true, false, false);
-        // emit KeyServiceActionRequest(
-        //     address(createdAccount),
-        //     _getUserOpWithSignature()
-        // );
+        vm.expectEmit(true, true, false, false);
+        emit KeyServiceActionRequest(
+            address(mainnetCreatedAccount),
+            _getUserOpWithSignature()
+        );
 
         _sendUserOperation(_getUserOpWithSignature());
-        assertTrue(createdAccount.isOwnerAddress(newOwner));
+        assertTrue(mainnetCreatedAccount.isOwnerAddress(newOwner));
 
         // // duplicate operation on optimismFork
         // vm.selectFork(optimismFork);
@@ -204,7 +210,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
     function _sign(
         UserOperation memory userOp
     ) internal view override returns (bytes memory signature) {
-        bytes32 toSign = createdAccount.getUserOpHashWithoutChainId(userOp);
+        bytes32 toSign = account.getUserOpHashWithoutChainId(userOp);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, toSign);
         signature = abi.encode(
             CoinbaseSmartWallet.SignatureWrapper(0, abi.encodePacked(r, s, v))
