@@ -24,7 +24,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
     KeyServicePaymaster public optimismPaymaster;
     CoinbaseSmartWalletFactory public optimismFactory;
     CoinbaseSmartWallet public optimismImplementationAccount;
-    CoinbaseSmartWallet public createdOptimismAccount;
+    CoinbaseSmartWallet public optimismCreatedAccount;
 
     bytes mainnetUserOpPaymasterAndData;
     bytes optimismUserOpPaymasterAndData;
@@ -44,13 +44,102 @@ contract TestExecuteCrossChainWithoutPaymaster is
         mainnetFork = vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
 
         // setup mainnet implementation account
-        mainnetImplementationAccount = new CoinbaseSmartWallet();
-        // // setup mainnet factory
-        // mainnetFactory = new CoinbaseSmartWalletFactory(
-        //     address(mainnetImplementationAccount)
+        // mainnetImplementationAccount = new CoinbaseSmartWallet();
+        // // // setup mainnet factory
+        // // mainnetFactory = new CoinbaseSmartWalletFactory(
+        // //     address(mainnetImplementationAccount)
+        // // );
+        // // // setup mainnet paymaster
+        // // mainnetPaymaster = new KeyServicePaymaster(entryPoint, signer);
+
+        // // etch key service emitter
+        // vm.etch(
+        //     0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
+        //     Static.KEY_SERVICE_EMITTER_BYTES
         // );
-        // // setup mainnet paymaster
-        // mainnetPaymaster = new KeyServicePaymaster(entryPoint, signer);
+
+        // vm.etch(
+        //     0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
+        //     Static.ENTRY_POINT_BYTES
+        // );
+
+        // // vm.etch(
+        // //     0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf,
+        // //     Static.IMPLEMENTATION_ACCOUNT_BYTES
+        // // );
+
+        // // mainnetImplementationAccount = CoinbaseSmartWallet(
+        // //     payable(address(0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf))
+        // // );
+
+        // // mainnetImplementationAccount.initialize(
+        // //     address(mainnetFactory),
+        // //     owners,
+        // //     0
+        // // );
+
+        // vm.etch(
+        //     0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69,
+        //     Static.INITALIZED_FACTORY_BYTES
+        // );
+
+        // mainnetFactory = CoinbaseSmartWalletFactory(
+        //     payable(address(0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69))
+        // );
+
+        // vm.store(
+        //     address(mainnetFactory),
+        //     0,
+        //     bytes32(abi.encode(address(mainnetImplementationAccount)))
+        // );
+
+        // vm.etch(
+        //     0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF,
+        //     Static.PAYMASTER_BYTES
+        // );
+
+        // mainnetPaymaster = KeyServicePaymaster(
+        //     payable(address(0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF))
+        // );
+
+        // vm.store(address(mainnetPaymaster), 0, bytes32(abi.encode(signer)));
+
+        // vm.store(
+        //     address(mainnetPaymaster),
+        //     bytes32(abi.encode(1)),
+        //     bytes32(abi.encode(entryPoint))
+        // );
+
+        // // create mainnet account
+        // mainnetCreatedAccount = mainnetFactory.createAccount(owners, 0);
+
+        // // add factory to paymaster
+        // vm.startPrank(signer);
+        // mainnetPaymaster.addFactory(address(mainnetFactory));
+        // vm.stopPrank();
+
+        // // setup mainnet userOpPaymasterAndData
+        // mainnetUserOpPaymasterAndData = abi.encodePacked(
+        //     address(mainnetPaymaster)
+        // );
+
+        // userOpCalldata = abi.encodeWithSelector(
+        //     CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
+        // );
+
+        /// ************************************************** ///
+
+        // // setup optimism fork
+        optimismFork = vm.createSelectFork(vm.envString("OPTIMISM_RPC_URL"));
+
+        // setup optimism implementation account
+        optimismImplementationAccount = new CoinbaseSmartWallet();
+        // // setup optimism factory
+        // optimismFactory = new CoinbaseSmartWalletFactory(
+        //     address(optimismImplementationAccount)
+        // );
+        // // setup optimism paymaster
+        // optimismPaymaster = new KeyServicePaymaster(entryPoint, signer);
 
         // etch key service emitter
         vm.etch(
@@ -68,12 +157,12 @@ contract TestExecuteCrossChainWithoutPaymaster is
         //     Static.IMPLEMENTATION_ACCOUNT_BYTES
         // );
 
-        // mainnetImplementationAccount = CoinbaseSmartWallet(
+        // optimismImplementationAccount = CoinbaseSmartWallet(
         //     payable(address(0x7E5F4552091A69125d5DfCb7b8C2659029395Bdf))
         // );
 
-        // mainnetImplementationAccount.initialize(
-        //     address(mainnetFactory),
+        // optimismImplementationAccount.initialize(
+        //     address(optimismFactory),
         //     owners,
         //     0
         // );
@@ -83,14 +172,14 @@ contract TestExecuteCrossChainWithoutPaymaster is
             Static.INITALIZED_FACTORY_BYTES
         );
 
-        mainnetFactory = CoinbaseSmartWalletFactory(
+        optimismFactory = CoinbaseSmartWalletFactory(
             payable(address(0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69))
         );
 
         vm.store(
-            address(mainnetFactory),
+            address(optimismFactory),
             0,
-            bytes32(abi.encode(address(mainnetImplementationAccount)))
+            bytes32(abi.encode(address(optimismImplementationAccount)))
         );
 
         vm.etch(
@@ -98,79 +187,34 @@ contract TestExecuteCrossChainWithoutPaymaster is
             Static.PAYMASTER_BYTES
         );
 
-        mainnetPaymaster = KeyServicePaymaster(
+        optimismPaymaster = KeyServicePaymaster(
             payable(address(0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF))
         );
 
-        vm.store(address(mainnetPaymaster), 0, bytes32(abi.encode(signer)));
+        vm.store(address(optimismPaymaster), 0, bytes32(abi.encode(signer)));
 
         vm.store(
-            address(mainnetPaymaster),
+            address(optimismPaymaster),
             bytes32(abi.encode(1)),
             bytes32(abi.encode(entryPoint))
         );
 
-        console.log(
-            "mainnetImplementationAccount",
-            address(mainnetImplementationAccount)
-        );
-        console.logBytes(address(mainnetImplementationAccount).code);
-
-        console.log("mainnetFactory", address(mainnetFactory));
-        console.logBytes(address(mainnetFactory).code);
-
-        console.log("mainnetPaymaster", address(mainnetPaymaster));
-        console.logBytes(address(mainnetPaymaster).code);
-
-        console.log("address 3", vm.addr(3));
-
-        // create mainnet account
-
-        mainnetCreatedAccount = mainnetFactory.createAccount(owners, 0);
-
-        console.log("mainnetCreatedAccount", address(mainnetCreatedAccount));
+        // create optimism account
+        optimismCreatedAccount = optimismFactory.createAccount(owners, 0);
 
         // add factory to paymaster
         vm.startPrank(signer);
-        mainnetPaymaster.addFactory(address(mainnetFactory));
+        optimismPaymaster.addFactory(address(optimismFactory));
         vm.stopPrank();
 
-        // setup mainnet userOpPaymasterAndData
-        mainnetUserOpPaymasterAndData = abi.encodePacked(
-            address(mainnetPaymaster)
+        // setup optimism userOpPaymasterAndData
+        optimismUserOpPaymasterAndData = abi.encodePacked(
+            address(optimismPaymaster)
         );
 
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
         );
-
-        // // setup optimism fork
-        // optimismFork = vm.createSelectFork(vm.envString("OPTIMISM_RPC_URL"));
-        // optimismEntryPoint = new EntryPoint();
-        // optimismImplementationAccount = new CoinbaseSmartWallet();
-        // optimismFactory = new CoinbaseSmartWalletFactory(
-        //     address(optimismImplementationAccount)
-        // );
-        // optimismPaymaster = new KeyServicePaymaster(optimismEntryPoint, signer);
-
-        // createdOptimismAccount = optimismFactory.createAccount(
-        //     owners,
-        //     0,
-        //     address(optimismEntryPoint)
-        // );
-
-        // vm.startPrank(signer);
-        // optimismPaymaster.addFactory(address(optimismFactory));
-        // vm.stopPrank();
-
-        // vm.etch(
-        //     0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
-        //     Static.KEY_SERVICE_EMITTER_BYTES
-        // );
-
-        // optimismUserOpPaymasterAndData = abi.encodePacked(
-        //     address(optimismPaymaster)
-        // );
     }
 
     function test_succeeds_crossChain_withPaymaster_whenSignaturesMatch()
@@ -178,53 +222,66 @@ contract TestExecuteCrossChainWithoutPaymaster is
     {
         // I need to etch the factories on each chain and then create each account so they have the same address
         // test operation built for local network on mainnet fork
-        vm.selectFork(mainnetFork);
+        // vm.selectFork(mainnetFork);
+        // vm.deal(signer, 1 ether);
+        // vm.startPrank(signer);
+        // mainnetPaymaster.deposit{value: 1 ether}();
+        // vm.stopPrank();
+        // bytes4 selector = MultiOwnable.addOwnerAddress.selector;
+        // assertTrue(mainnetCreatedAccount.canSkipChainIdValidation(selector));
+        // address newOwner = address(6);
+        // assertFalse(mainnetCreatedAccount.isOwnerAddress(newOwner));
+        // calls.push(abi.encodeWithSelector(selector, newOwner));
+        // userOpCalldata = abi.encodeWithSelector(
+        //     CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
+        //     calls
+        // );
+        // createdAccount = mainnetCreatedAccount;
+        // userOpPaymasterAndData = mainnetUserOpPaymasterAndData;
+        // userOpNonce = createdAccount.REPLAYABLE_NONCE_KEY() << 64;
+        // vm.expectEmit(true, true, false, false);
+        // emit KeyServiceActionRequest(
+        //     address(createdAccount),
+        //     _getUserOpWithSignature()
+        // );
+        // _sendUserOperation(_getUserOpWithSignature());
+        // assertTrue(createdAccount.isOwnerAddress(newOwner));
+
+        /// ************************************************** ///
+
+        // duplicate operation on optimismFork
+        vm.selectFork(optimismFork);
 
         vm.deal(signer, 1 ether);
 
         vm.startPrank(signer);
-        mainnetPaymaster.deposit{value: 1 ether}();
+        optimismPaymaster.deposit{value: 1 ether}();
         vm.stopPrank();
 
-        bytes4 selector = MultiOwnable.addOwnerAddress.selector;
-        assertTrue(mainnetCreatedAccount.canSkipChainIdValidation(selector));
-        address newOwner = address(6);
-        assertFalse(mainnetCreatedAccount.isOwnerAddress(newOwner));
+        bytes4 selector2 = MultiOwnable.addOwnerAddress.selector;
+        assertTrue(optimismCreatedAccount.canSkipChainIdValidation(selector2));
+        address newOwner2 = address(6);
+        assertFalse(optimismCreatedAccount.isOwnerAddress(newOwner2));
 
-        calls.push(abi.encodeWithSelector(selector, newOwner));
+        calls.push(abi.encodeWithSelector(selector2, newOwner2));
+
         userOpCalldata = abi.encodeWithSelector(
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
             calls
         );
 
-        createdAccount = mainnetCreatedAccount;
-        userOpPaymasterAndData = mainnetUserOpPaymasterAndData;
+        createdAccount = optimismCreatedAccount;
+        userOpPaymasterAndData = optimismUserOpPaymasterAndData;
         userOpNonce = createdAccount.REPLAYABLE_NONCE_KEY() << 64;
 
         vm.expectEmit(true, true, false, false);
         emit KeyServiceActionRequest(
-            address(createdAccount),
+            address(optimismCreatedAccount),
             _getUserOpWithSignature()
         );
 
         _sendUserOperation(_getUserOpWithSignature());
-        assertTrue(createdAccount.isOwnerAddress(newOwner));
-
-        // // duplicate operation on optimismFork
-        // vm.selectFork(optimismFork);
-        // vm.deal(signer, 1 ether);
-        // vm.startPrank(signer);
-        // optimismPaymaster.deposit{value: 1 ether}();
-        // vm.stopPrank();
-        // createdAccount = createdOptimismAccount;
-        // userOpPaymasterAndData = optimismUserOpPaymasterAndData;
-        // vm.expectEmit(true, true, false, false);
-        // emit KeyServiceActionRequest(
-        //     address(createdOptimismAccount),
-        //     _getUserOpWithSignature()
-        // );
-        // _sendUserOperation(_getUserOpWithSignature());
-        // assertTrue(createdOptimismAccount.isOwnerAddress(newOwner));
+        assertTrue(optimismCreatedAccount.isOwnerAddress(newOwner2));
     }
 
     function _sendUserOperation(UserOperation memory userOp) internal override {
