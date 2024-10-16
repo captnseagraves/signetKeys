@@ -263,6 +263,7 @@ contract CoinbaseSmartWallet is
 
             bytes4 selector = bytes4(call);
             if (!canSkipChainIdValidation(selector)) {
+                console.log("Selector not allowed");
                 revert SelectorNotAllowed(selector);
             }
 
@@ -343,7 +344,8 @@ contract CoinbaseSmartWallet is
     /// @return `true` is the function selector is allowed to skip the chain ID validation, else `false`.
     function canSkipChainIdValidation(
         bytes4 functionSelector
-    ) public pure returns (bool) {
+    ) public view returns (bool) {
+        console.logBytes4(functionSelector);
         if (
             functionSelector == MultiOwnable.addOwnerPublicKey.selector ||
             functionSelector == MultiOwnable.addOwnerAddress.selector ||
