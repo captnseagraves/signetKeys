@@ -154,7 +154,9 @@ contract CoinbaseSmartWallet is
         bytes[] memory owners,
         uint256 nonce
     ) external payable virtual {
+        console.log("in account initialize");
         if (nextOwnerIndex() != 0) {
+            console.log("apparently this already exists");
             revert Initialized();
         }
 
