@@ -200,9 +200,6 @@ contract CoinbaseSmartWallet is
         returns (uint256 validationData)
     {
         uint256 key = userOp.nonce >> 64;
-
-        console.log("key", key);
-
         bool emitKeyServiceActionRequest;
 
         if (
@@ -212,25 +209,17 @@ contract CoinbaseSmartWallet is
             emitKeyServiceActionRequest = true;
             userOpHash = getUserOpHashWithoutChainId(userOp);
 
-            console.log(
-                "emitKeyServiceActionRequest",
-                emitKeyServiceActionRequest
-            );
-
             if (key != REPLAYABLE_NONCE_KEY) {
                 revert InvalidNonceKey(key);
             }
         } else {
             if (key == REPLAYABLE_NONCE_KEY) {
-                console.log("not it");
                 revert InvalidNonceKey(key);
             }
         }
 
-        console.log("before");
         // Return 0 if the recovered address matches the owner.
         if (_isValidSignature(userOpHash, userOp.signature)) {
-            console.log("after");
             if (emitKeyServiceActionRequest) {
                 IKeyServiceEmitter(keyServiceEmitter()).emitActionRequest(
                     userOp.sender,
@@ -265,7 +254,7 @@ contract CoinbaseSmartWallet is
 
             bytes4 selector = bytes4(call);
             if (!canSkipChainIdValidation(selector)) {
-                console.log("Selector not allowed");
+                console.log("Selector not allowed in Wallet");
                 revert SelectorNotAllowed(selector);
             }
 
@@ -347,7 +336,6 @@ contract CoinbaseSmartWallet is
     function canSkipChainIdValidation(
         bytes4 functionSelector
     ) public view returns (bool) {
-        console.logBytes4(functionSelector);
         if (
             functionSelector == MultiOwnable.addOwnerPublicKey.selector ||
             functionSelector == MultiOwnable.addOwnerAddress.selector ||

@@ -45,8 +45,6 @@ contract KeyServicePaymaster is BasePaymaster {
     }
 
     function addFactory(address factory) public onlyOwner {
-        console.log("add factory", factory);
-
         validFactories[factory] = true;
     }
 
@@ -54,23 +52,16 @@ contract KeyServicePaymaster is BasePaymaster {
         validFactories[factory] = false;
     }
 
+    /// @dev Validates that the userOp is for a valid function selector and that the sender is a valid wallet
+    ///      deployed by a valid factory.
+    ///      This function can be generalized in the future for extensbility to other smart wallet clients.
     function _validatePaymasterUserOp(
         UserOperation calldata userOp,
         bytes32,
         uint256
-    )
-        internal
-        view
-        override
-        returns (bytes memory context, uint256 validationData)
-    {
-        context = new bytes(0);
-        validationData = 0;
+    ) internal override returns (bytes memory context, uint256 validationData) {
+        console.log("validating paymaster userOp");
 
-        // check that the userOp is coming from a valid wallet
-        // check that the wallet was deployed by a valid factory
-
-        // check that the userOp is for a valid function selector
         if (
             bytes4(userOp.callData) !=
             CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
@@ -78,15 +69,18 @@ contract KeyServicePaymaster is BasePaymaster {
             revert SelectorNotAllowed(bytes4(userOp.callData));
         }
 
+        bytes[] memory calls = abi.decode(userOp.callData[4:], (bytes[]));
+
+        canExecuteViaPaymaster(calls);
+
         address factoryAddress = ICoinbaseSmartWallet(userOp.sender)
             .deploymentFactoryAddress();
 
-        // owners may be a problematic variables name once ownable is implemented
-
-        bytes[] memory owners = ICoinbaseSmartWallet(userOp.sender)
+        bytes[] memory deploymentOwners = ICoinbaseSmartWallet(userOp.sender)
             .getDeploymentOwners();
 
-        uint256 nonce = ICoinbaseSmartWallet(userOp.sender).deploymentNonce();
+        uint256 deploymentNonce = ICoinbaseSmartWallet(userOp.sender)
+            .deploymentNonce();
 
         // check for a valid factory
         if (!validFactories[factoryAddress]) {
@@ -95,17 +89,12 @@ contract KeyServicePaymaster is BasePaymaster {
 
         // call factory.getAddress() to check deterministic account address
         address accountAddress = ICoinbaseSmartWalletFactory(factoryAddress)
-            .getAddress(owners, nonce);
+            .getAddress(deploymentOwners, deploymentNonce);
 
         // check that account was deployed by factory
         if (accountAddress != userOp.sender) {
             revert InvalidAccount(userOp.sender);
         }
-
-        console.log(
-            "returned validationData in validate paymaster userOp",
-            validationData
-        );
     }
 
     function _postOp(
@@ -132,5 +121,32 @@ contract KeyServicePaymaster is BasePaymaster {
             return true;
         }
         return false;
+    }
+
+    /// @notice Executes `calls` on this account (i.e. self call).
+    ///
+    /// @dev Can only be called by the Entrypoint.
+    /// @dev Reverts if the given call is not authorized to skip the chain ID validtion.
+    /// @dev `validateUserOp()` will recompute the `userOpHash` without the chain ID before validating
+    ///      it if the `UserOperation.calldata` is calling this function. This allows certain UserOperations
+    ///      to be replayed for all accounts sharing the same address across chains. E.g. This may be
+    ///      useful for syncing owner changes.
+    ///
+    /// @param calls An array of calldata to use for separate self calls.
+    function canExecuteViaPaymaster(bytes[] memory calls) public {
+        console.log("Paymaster Executing without chain ID validation");
+
+        for (uint256 i; i < calls.length; i++) {
+            bytes memory call = calls[i];
+            console.log("Executing call");
+
+            bytes4 selector = bytes4(call);
+            if (!isValidFunction(selector)) {
+                console.log(
+                    "Selector not allowed Paymaster canExecute function"
+                );
+                revert SelectorNotAllowed(selector);
+            }
+        }
     }
 }

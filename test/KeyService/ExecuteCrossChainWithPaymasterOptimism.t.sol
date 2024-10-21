@@ -5,30 +5,29 @@ import "../CoinbaseSmartWallet/SmartWalletTestBase.sol";
 
 import "../../src/KeyServiceEmitter.sol";
 import "../../src/KeyServicePaymaster.sol";
-import {CoinbaseSmartWalletFactory} from "../../src/CoinbaseSmartWalletFactory.sol";
+import "../../src/CoinbaseSmartWalletFactory.sol";
 import "../../src/CoinbaseSmartWallet.sol";
 
 import {console} from "forge-std/console.sol";
 
-contract TestExecuteCrossChainWithoutPaymaster is
+/// @dev this is a sister test to ExecuteCrossChainWithPaymasterMainnet.t.sol.
+/// Together they show that with contracts deployed to the same address the same txn is valid and executed on multiple chains.
+/// They would be in the same file and test except there seems to be a bug in Foundry with contracts at the same address on multiple forks.
+
+contract TestExecuteCrossChainWithPaymasterOptimism is
     SmartWalletTestBase,
     KeyServiceEmitter
 {
     KeyServicePaymaster public optimismPaymaster;
     CoinbaseSmartWalletFactory public optimismFactory;
-    CoinbaseSmartWallet public optimismImplementationAccount;
     CoinbaseSmartWallet public optimismCreatedAccount;
-
     CoinbaseSmartWallet public optimismImplementationReferenceAccount;
 
-    bytes optimismImplementationReferenceAccountCode;
-
-    bytes optimismUserOpPaymasterAndData;
-
-    // chain forks for cross chain testing
     uint256 optimismFork;
 
     bytes[] calls;
+
+    bytes optimismUserOpPaymasterAndData;
 
     function setUp() public override {
         super.setUp();
@@ -36,17 +35,9 @@ contract TestExecuteCrossChainWithoutPaymaster is
         // setup mainnet fork
         optimismFork = vm.createSelectFork(vm.envString("OPTIMISM_RPC_URL"));
 
-        // setup optimism implementation account
+        /// @dev this is an unused variable, but for some reason the test fails without it. Feels like a bug in Foundry.
+        // setup optimism implementation reference account
         optimismImplementationReferenceAccount = new CoinbaseSmartWallet();
-
-        bytes32 implemetationAccountSlot0 = vm.load(
-            address(optimismImplementationReferenceAccount),
-            0
-        );
-
-        optimismImplementationReferenceAccountCode = address(
-            optimismImplementationReferenceAccount
-        ).code;
 
         // etch key service emitter
         vm.etch(
@@ -54,48 +45,51 @@ contract TestExecuteCrossChainWithoutPaymaster is
             Static.KEY_SERVICE_EMITTER_BYTES
         );
 
+        // etch entry point
         vm.etch(
             0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789,
             Static.ENTRY_POINT_BYTES
         );
 
+        // etch implementation account
         vm.etch(
             0xF1F6619B38A98d6De0800F1DefC0a6399eB6d30C,
-            address(optimismImplementationReferenceAccount).code
+            Static.IMPLEMENTATION_ACCOUNT_BYTES
         );
 
-        vm.store(
-            0xF1F6619B38A98d6De0800F1DefC0a6399eB6d30C,
-            0,
-            implemetationAccountSlot0
-        );
-
+        // etch factory
         vm.etch(
             0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69,
             Static.INITALIZED_FACTORY_BYTES
         );
 
+        // instantiate factory
         optimismFactory = CoinbaseSmartWalletFactory(
             payable(address(0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69))
         );
 
+        // set implementation address in factory
         vm.store(
             address(optimismFactory),
             0,
             bytes32(abi.encode(0xF1F6619B38A98d6De0800F1DefC0a6399eB6d30C))
         );
 
+        // etch paymaster
         vm.etch(
             0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF,
             Static.PAYMASTER_BYTES
         );
 
+        // instantiate paymaster
         optimismPaymaster = KeyServicePaymaster(
             payable(address(0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF))
         );
 
+        // set paymaster owner
         vm.store(address(optimismPaymaster), 0, bytes32(abi.encode(signer)));
 
+        // set entry point
         vm.store(
             address(optimismPaymaster),
             bytes32(abi.encode(1)),
@@ -115,7 +109,6 @@ contract TestExecuteCrossChainWithoutPaymaster is
             address(optimismPaymaster)
         );
 
-        // this line causes an issue
         userOpNonce = optimismCreatedAccount.REPLAYABLE_NONCE_KEY() << 64;
 
         userOpCalldata = abi.encodeWithSelector(
@@ -127,6 +120,8 @@ contract TestExecuteCrossChainWithoutPaymaster is
         public
     {
         vm.selectFork(optimismFork);
+
+        // paymaster funds not used in local testnet fork, but leaving here for legibility on a live testnet
         vm.deal(signer, 1 ether);
         vm.startPrank(signer);
         optimismPaymaster.deposit{value: 1 ether}();
@@ -166,9 +161,9 @@ contract TestExecuteCrossChainWithoutPaymaster is
             nonce: userOpNonce,
             initCode: "",
             callData: userOpCalldata,
-            callGasLimit: uint256(20_000_000),
-            verificationGasLimit: uint256(20_000_000),
-            preVerificationGas: uint256(1_000_000),
+            callGasLimit: uint256(2_000_000),
+            verificationGasLimit: uint256(2_000_000),
+            preVerificationGas: uint256(100_000),
             maxFeePerGas: uint256(0),
             maxPriorityFeePerGas: uint256(0),
             paymasterAndData: optimismUserOpPaymasterAndData,

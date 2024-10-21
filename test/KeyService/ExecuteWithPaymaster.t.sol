@@ -29,10 +29,6 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
 
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
 
-        userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
-        );
-
         vm.startPrank(signer);
         paymaster.addFactory(address(factory));
         vm.stopPrank();
@@ -70,6 +66,37 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
         assertTrue(createdAccount.isOwnerAddress(newOwner));
     }
 
+    // the case I want to test here is ithe calldata being provided with executeWithoutChainIdValidation
+    // but not with a valid funciton selector.
+
+    function test_paymaster_reverts_whenSelectorNotApproved() public {
+        bytes4 selector = CoinbaseSmartWallet.execute.selector;
+        assertFalse(createdAccount.canSkipChainIdValidation(selector));
+        bytes memory restrictedSelectorCalldata = abi.encodeWithSelector(
+            selector,
+            ""
+        );
+        calls.push(restrictedSelectorCalldata);
+        userOpCalldata = abi.encodeWithSelector(
+            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
+            calls
+        );
+
+        UserOperation memory executionUserOp = _getUserOpWithSignature();
+        UserOperation[] memory ops = new UserOperation[](1);
+        ops[0] = executionUserOp;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEntryPoint.FailedOp.selector,
+                0,
+                "AA33 reverted (or OOG)"
+            )
+        );
+
+        entryPoint.handleOps(ops, payable(bundler));
+    }
+
     function _getUserOp()
         internal
         view
@@ -89,6 +116,22 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
             paymasterAndData: userOpPaymasterAndData,
             signature: ""
         });
+    }
+
+    function _sendUserOperation(UserOperation memory userOp) internal override {
+        UserOperation[] memory ops = new UserOperation[](1);
+        ops[0] = userOp;
+        entryPoint.handleOps(ops, payable(bundler));
+    }
+
+    function _getUserOpWithSignature()
+        internal
+        view
+        override
+        returns (UserOperation memory userOp)
+    {
+        userOp = _getUserOp();
+        userOp.signature = _sign(userOp);
     }
 
     function _sign(
