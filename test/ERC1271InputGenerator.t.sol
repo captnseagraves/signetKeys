@@ -49,10 +49,9 @@ contract CoinbaseSmartWallet1271InputGeneratorTest is Test {
             hash,
             address(factory),
             abi.encodeWithSignature(
-                "createAccount(bytes[],uint256,address)",
+                "createAccount(bytes[],uint256)",
                 owners,
-                0,
-                address(entryPoint)
+                0
             )
         );
 
