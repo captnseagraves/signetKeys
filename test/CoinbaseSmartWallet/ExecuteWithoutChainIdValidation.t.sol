@@ -3,15 +3,13 @@ pragma solidity ^0.8.0;
 
 import "./SmartWalletTestBase.sol";
 
-import {MockKeyServiceEmitter} from "../mocks/MockKeyServiceEmitter.sol";
-
-import "../../src/KeyServiceEmitter.sol";
+import {MockSignetEmitter} from "../mocks/MockSignetEmitter.sol";
 
 import {console} from "forge-std/console.sol";
 
 contract TestExecuteWithoutChainIdValidation is
     SmartWalletTestBase,
-    KeyServiceEmitter
+    SignetEmitter
 {
     bytes[] calls;
 
@@ -42,10 +40,7 @@ contract TestExecuteWithoutChainIdValidation is
         );
 
         vm.expectEmit(true, true, false, false);
-        emit KeyServiceActionRequest(
-            address(account),
-            _getUserOpWithSignature()
-        );
+        emit SignetActionRequest(address(account), _getUserOpWithSignature());
 
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(account.isOwnerAddress(newOwner));

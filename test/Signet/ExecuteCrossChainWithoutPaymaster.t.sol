@@ -3,13 +3,13 @@ pragma solidity ^0.8.0;
 
 import "../CoinbaseSmartWallet/SmartWalletTestBase.sol";
 
-import "../../src/KeyServiceEmitter.sol";
+import "../../src/SignetEmitter.sol";
 
 import {console} from "forge-std/console.sol";
 
 contract TestExecuteCrossChainWithoutPaymaster is
     SmartWalletTestBase,
-    KeyServiceEmitter
+    SignetEmitter
 {
     CoinbaseSmartWallet public mainnetAccount;
     CoinbaseSmartWallet public optimismAccount;
@@ -36,7 +36,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
         mainnetAccount = MockCoinbaseSmartWallet(payable(address(account)));
         vm.etch(
             0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
-            Static.KEY_SERVICE_EMITTER_BYTES
+            Static.SIGNET_EMITTER_BYTES
         );
 
         // setup optimism fork
@@ -45,7 +45,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
         optimismAccount = MockCoinbaseSmartWallet(payable(address(account)));
         vm.etch(
             0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
-            Static.KEY_SERVICE_EMITTER_BYTES
+            Static.SIGNET_EMITTER_BYTES
         );
     }
 
@@ -65,7 +65,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
         );
 
         vm.expectEmit(true, true, false, false);
-        emit KeyServiceActionRequest(
+        emit SignetActionRequest(
             address(mainnetAccount),
             _getUserOpWithSignature()
         );
@@ -77,7 +77,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
         vm.selectFork(optimismFork);
 
         vm.expectEmit(true, true, false, false);
-        emit KeyServiceActionRequest(
+        emit SignetActionRequest(
             address(optimismAccount),
             _getUserOpWithSignature()
         );

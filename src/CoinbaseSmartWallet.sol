@@ -12,7 +12,7 @@ import {WebAuthn} from "webauthn-sol/WebAuthn.sol";
 import {ERC1271} from "./ERC1271.sol";
 import {MultiOwnable} from "./MultiOwnable.sol";
 
-import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
+import {ISignetEmitter} from "./ISignetEmitter.sol";
 
 import {console} from "forge-std/console.sol";
 
@@ -154,13 +154,9 @@ contract CoinbaseSmartWallet is
         bytes[] memory owners,
         uint256 nonce
     ) external payable virtual {
-        console.log("in account initialize");
         if (nextOwnerIndex() != 0) {
-            console.log("apparently this already exists");
             revert Initialized();
         }
-
-        console.log("in account initialize facotry address", factoryAddress);
 
         deploymentFactoryAddress = factoryAddress;
         deploymentOwners = owners;
@@ -200,13 +196,13 @@ contract CoinbaseSmartWallet is
         returns (uint256 validationData)
     {
         uint256 key = userOp.nonce >> 64;
-        bool emitKeyServiceActionRequest;
+        bool emitSignetActionRequest;
 
         if (
             bytes4(userOp.callData) ==
             this.executeWithoutChainIdValidation.selector
         ) {
-            emitKeyServiceActionRequest = true;
+            emitSignetActionRequest = true;
             userOpHash = getUserOpHashWithoutChainId(userOp);
 
             if (key != REPLAYABLE_NONCE_KEY) {
@@ -220,8 +216,8 @@ contract CoinbaseSmartWallet is
 
         // Return 0 if the recovered address matches the owner.
         if (_isValidSignature(userOpHash, userOp.signature)) {
-            if (emitKeyServiceActionRequest) {
-                IKeyServiceEmitter(keyServiceEmitter()).emitActionRequest(
+            if (emitSignetActionRequest) {
+                ISignetEmitter(signetEmitter()).emitActionRequest(
                     userOp.sender,
                     userOp
                 );
@@ -246,15 +242,10 @@ contract CoinbaseSmartWallet is
     function executeWithoutChainIdValidation(
         bytes[] calldata calls
     ) external payable virtual onlyEntryPoint {
-        console.log("Executing without chain ID validation");
-
         for (uint256 i; i < calls.length; i++) {
             bytes calldata call = calls[i];
-            console.log("Executing call");
-
             bytes4 selector = bytes4(call);
             if (!canSkipChainIdValidation(selector)) {
-                console.log("Selector not allowed in Wallet");
                 revert SelectorNotAllowed(selector);
             }
 
@@ -297,10 +288,10 @@ contract CoinbaseSmartWallet is
         return 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
     }
 
-    /// @notice Returns the address of the KeyServiceEmitter v0.1
+    /// @notice Returns the address of the SignetEmitter v0.1
     ///
-    /// @return The address of the KeyServiceEmitter v0.1
-    function keyServiceEmitter() public view virtual returns (address) {
+    /// @return The address of the SignetEmitter v0.1
+    function signetEmitter() public view virtual returns (address) {
         return 0x117DA503d0C065A99C9cc640d963Bbd7081A0beb;
     }
 
@@ -335,7 +326,7 @@ contract CoinbaseSmartWallet is
     /// @return `true` is the function selector is allowed to skip the chain ID validation, else `false`.
     function canSkipChainIdValidation(
         bytes4 functionSelector
-    ) public view returns (bool) {
+    ) public pure returns (bool) {
         if (
             functionSelector == MultiOwnable.addOwnerPublicKey.selector ||
             functionSelector == MultiOwnable.addOwnerAddress.selector ||
@@ -376,22 +367,14 @@ contract CoinbaseSmartWallet is
         bytes32 hash,
         bytes calldata signature
     ) internal view virtual override returns (bool) {
-        console.log("here start");
-
         SignatureWrapper memory sigWrapper = abi.decode(
             signature,
             (SignatureWrapper)
         );
 
-        console.log("here afterSigWrapper");
-
         bytes memory ownerBytes = ownerAtIndex(sigWrapper.ownerIndex);
 
-        console.log("here 1");
-
         if (ownerBytes.length == 32) {
-            console.log("here 2");
-
             if (uint256(bytes32(ownerBytes)) > type(uint160).max) {
                 // technically should be impossible given owners can only be added with
                 // addOwnerAddress and addOwnerPublicKey, but we leave incase of future changes.
@@ -399,7 +382,6 @@ contract CoinbaseSmartWallet is
             }
 
             address owner;
-            console.log("sigOwnerInContract", owner);
 
             assembly ("memory-safe") {
                 owner := mload(add(ownerBytes, 32))

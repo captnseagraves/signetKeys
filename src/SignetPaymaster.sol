@@ -7,15 +7,14 @@ import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
 import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-import {IKeyServiceEmitter} from "./IKeyServiceEmitter.sol";
-import {ICoinbaseSmartWalletFactory} from "./ICoinbaseSmartWalletFactory.sol";
-import {ICoinbaseSmartWallet} from "./ICoinbaseSmartWallet.sol";
-import {CoinbaseSmartWallet} from "./CoinbaseSmartWallet.sol";
+import {ISignetEmitter} from "./ISignetEmitter.sol";
+import {ISignetSmartWalletFactory} from "./ISignetSmartWalletFactory.sol";
+import {ISignetSmartWallet} from "./ISignetSmartWallet.sol";
 import {MultiOwnable} from "./MultiOwnable.sol";
 
 import {console} from "forge-std/console.sol";
 
-contract KeyServicePaymaster is BasePaymaster {
+contract SignetPaymaster is BasePaymaster {
     mapping(address => bool) public validFactories;
 
     /// @notice Thrown when a call is passed to `executeWithoutChainIdValidation` that is not allowed by
@@ -59,12 +58,20 @@ contract KeyServicePaymaster is BasePaymaster {
         UserOperation calldata userOp,
         bytes32,
         uint256
-    ) internal override returns (bytes memory context, uint256 validationData) {
+    )
+        internal
+        view
+        override
+        returns (bytes memory context, uint256 validationData)
+    {
         console.log("validating paymaster userOp");
+
+        context = new bytes(0);
+        validationData = 0;
 
         if (
             bytes4(userOp.callData) !=
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
+            ISignetSmartWallet.executeWithoutChainIdValidation.selector
         ) {
             revert SelectorNotAllowed(bytes4(userOp.callData));
         }
@@ -73,13 +80,15 @@ contract KeyServicePaymaster is BasePaymaster {
 
         canExecuteViaPaymaster(calls);
 
-        address factoryAddress = ICoinbaseSmartWallet(userOp.sender)
+        // create ISignetSmartWallet interface so these functions can be generalized
+
+        address factoryAddress = ISignetSmartWallet(userOp.sender)
             .deploymentFactoryAddress();
 
-        bytes[] memory deploymentOwners = ICoinbaseSmartWallet(userOp.sender)
+        bytes[] memory deploymentOwners = ISignetSmartWallet(userOp.sender)
             .getDeploymentOwners();
 
-        uint256 deploymentNonce = ICoinbaseSmartWallet(userOp.sender)
+        uint256 deploymentNonce = ISignetSmartWallet(userOp.sender)
             .deploymentNonce();
 
         // check for a valid factory
@@ -88,7 +97,7 @@ contract KeyServicePaymaster is BasePaymaster {
         }
 
         // call factory.getAddress() to check deterministic account address
-        address accountAddress = ICoinbaseSmartWalletFactory(factoryAddress)
+        address accountAddress = ISignetSmartWalletFactory(factoryAddress)
             .getAddress(deploymentOwners, deploymentNonce);
 
         // check that account was deployed by factory
@@ -133,18 +142,11 @@ contract KeyServicePaymaster is BasePaymaster {
     ///      useful for syncing owner changes.
     ///
     /// @param calls An array of calldata to use for separate self calls.
-    function canExecuteViaPaymaster(bytes[] memory calls) public {
-        console.log("Paymaster Executing without chain ID validation");
-
+    function canExecuteViaPaymaster(bytes[] memory calls) public pure {
         for (uint256 i; i < calls.length; i++) {
             bytes memory call = calls[i];
-            console.log("Executing call");
-
             bytes4 selector = bytes4(call);
             if (!isValidFunction(selector)) {
-                console.log(
-                    "Selector not allowed Paymaster canExecute function"
-                );
                 revert SelectorNotAllowed(selector);
             }
         }

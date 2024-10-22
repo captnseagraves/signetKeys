@@ -7,10 +7,10 @@ import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 import {Script, console2} from "forge-std/Script.sol";
 
 import {CoinbaseSmartWallet} from "../src/CoinbaseSmartWallet.sol";
-import {ICoinbaseSmartWallet} from "../src/ICoinbaseSmartWallet.sol";
+import {ISignetSmartWallet} from "../src/ISignetSmartWallet.sol";
 
 import {CoinbaseSmartWalletFactory} from "../src/CoinbaseSmartWalletFactory.sol";
-import {ICoinbaseSmartWalletFactory} from "../src/ICoinbaseSmartWalletFactory.sol";
+import {ISignetSmartWalletFactory} from "../src/ISignetSmartWalletFactory.sol";
 
 import {MultiOwnable} from "../src/MultiOwnable.sol";
 
@@ -20,7 +20,7 @@ contract DeployWalletScript is Script {
 
         console2.log("Deploying on chain ID", block.chainid);
 
-        ICoinbaseSmartWalletFactory factory = ICoinbaseSmartWalletFactory(
+        ISignetSmartWalletFactory factory = ISignetSmartWalletFactory(
             0x055c6b31791236338DcEd5c295127DD01D55ea04
         );
 

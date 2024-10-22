@@ -3,46 +3,47 @@ pragma solidity ^0.8.0;
 
 import "../CoinbaseSmartWallet/SmartWalletTestBase.sol";
 
-import "../../src/KeyServiceEmitter.sol";
-import "../../src/KeyServicePaymaster.sol";
+import "../../src/SignetEmitter.sol";
+import "../../src/SignetPaymaster.sol";
 import "../../src/CoinbaseSmartWalletFactory.sol";
 import "../../src/CoinbaseSmartWallet.sol";
+import "../../src/ISignetSmartWallet.sol";
 
 import {console} from "forge-std/console.sol";
 
-/// @dev this is a sister test to ExecuteCrossChainWithPaymasterMainnet.t.sol.
+/// @dev this is a sister test to ExecuteCrossChainWithPaymasterOptimism.t.sol.
 /// Together they show that with contracts deployed to the same address the same txn is valid and executed on multiple chains.
 /// They would be in the same file and test except there seems to be a bug in Foundry with contracts at the same address on multiple forks.
 
-contract TestExecuteCrossChainWithPaymasterOptimism is
+contract TestExecuteCrossChainWithoutPaymaster is
     SmartWalletTestBase,
-    KeyServiceEmitter
+    SignetEmitter
 {
-    KeyServicePaymaster public optimismPaymaster;
-    CoinbaseSmartWalletFactory public optimismFactory;
-    CoinbaseSmartWallet public optimismCreatedAccount;
-    CoinbaseSmartWallet public optimismImplementationReferenceAccount;
+    SignetPaymaster public mainnetPaymaster;
+    CoinbaseSmartWalletFactory public mainnetFactory;
+    CoinbaseSmartWallet public mainnetCreatedAccount;
+    CoinbaseSmartWallet public mainnetImplementationReferenceAccount;
 
-    uint256 optimismFork;
+    uint256 mainnetFork;
 
     bytes[] calls;
 
-    bytes optimismUserOpPaymasterAndData;
+    bytes mainnetUserOpPaymasterAndData;
 
     function setUp() public override {
         super.setUp();
 
         // setup mainnet fork
-        optimismFork = vm.createSelectFork(vm.envString("OPTIMISM_RPC_URL"));
+        mainnetFork = vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
 
         /// @dev this is an unused variable, but for some reason the test fails without it. Feels like a bug in Foundry.
-        // setup optimism implementation reference account
-        optimismImplementationReferenceAccount = new CoinbaseSmartWallet();
+        // setup mainnet implementation reference account
+        mainnetImplementationReferenceAccount = new CoinbaseSmartWallet();
 
         // etch key service emitter
         vm.etch(
             0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
-            Static.KEY_SERVICE_EMITTER_BYTES
+            Static.SIGNET_EMITTER_BYTES
         );
 
         // etch entry point
@@ -64,13 +65,13 @@ contract TestExecuteCrossChainWithPaymasterOptimism is
         );
 
         // instantiate factory
-        optimismFactory = CoinbaseSmartWalletFactory(
+        mainnetFactory = CoinbaseSmartWalletFactory(
             payable(address(0x6813Eb9362372EEF6200f3b1dbC3f819671cBA69))
         );
 
         // set implementation address in factory
         vm.store(
-            address(optimismFactory),
+            address(mainnetFactory),
             0,
             bytes32(abi.encode(0xF1F6619B38A98d6De0800F1DefC0a6399eB6d30C))
         );
@@ -82,66 +83,66 @@ contract TestExecuteCrossChainWithPaymasterOptimism is
         );
 
         // instantiate paymaster
-        optimismPaymaster = KeyServicePaymaster(
+        mainnetPaymaster = SignetPaymaster(
             payable(address(0x2B5AD5c4795c026514f8317c7a215E218DcCD6cF))
         );
 
         // set paymaster owner
-        vm.store(address(optimismPaymaster), 0, bytes32(abi.encode(signer)));
+        vm.store(address(mainnetPaymaster), 0, bytes32(abi.encode(signer)));
 
         // set entry point
         vm.store(
-            address(optimismPaymaster),
+            address(mainnetPaymaster),
             bytes32(abi.encode(1)),
             bytes32(abi.encode(entryPoint))
         );
 
-        // create optimism account
-        optimismCreatedAccount = optimismFactory.createAccount(owners, 0);
+        // create mainnet account
+        mainnetCreatedAccount = mainnetFactory.createAccount(owners, 0);
 
         // add factory to paymaster
         vm.startPrank(signer);
-        optimismPaymaster.addFactory(address(optimismFactory));
+        mainnetPaymaster.addFactory(address(mainnetFactory));
         vm.stopPrank();
 
-        // setup optimism userOpPaymasterAndData
-        optimismUserOpPaymasterAndData = abi.encodePacked(
-            address(optimismPaymaster)
+        // setup mainnet userOpPaymasterAndData
+        mainnetUserOpPaymasterAndData = abi.encodePacked(
+            address(mainnetPaymaster)
         );
 
-        userOpNonce = optimismCreatedAccount.REPLAYABLE_NONCE_KEY() << 64;
+        userOpNonce = mainnetCreatedAccount.REPLAYABLE_NONCE_KEY() << 64;
 
         userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector
+            ISignetSmartWallet.executeWithoutChainIdValidation.selector
         );
     }
 
-    function test_succeeds_crossChain_withPaymaster_optimism_whenSignaturesMatch()
+    function test_succeeds_crossChain_withPaymaster_mainnet_whenSignaturesMatch()
         public
     {
-        vm.selectFork(optimismFork);
+        vm.selectFork(mainnetFork);
 
         // paymaster funds not used in local testnet fork, but leaving here for legibility on a live testnet
         vm.deal(signer, 1 ether);
         vm.startPrank(signer);
-        optimismPaymaster.deposit{value: 1 ether}();
+        mainnetPaymaster.deposit{value: 1 ether}();
         vm.stopPrank();
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
-        assertTrue(optimismCreatedAccount.canSkipChainIdValidation(selector));
+        assertTrue(mainnetCreatedAccount.canSkipChainIdValidation(selector));
         address newOwner = address(6);
-        assertFalse(optimismCreatedAccount.isOwnerAddress(newOwner));
+        assertFalse(mainnetCreatedAccount.isOwnerAddress(newOwner));
         calls.push(abi.encodeWithSelector(selector, newOwner));
         userOpCalldata = abi.encodeWithSelector(
-            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
+            ISignetSmartWallet.executeWithoutChainIdValidation.selector,
             calls
         );
         vm.expectEmit(true, true, false, false);
-        emit KeyServiceActionRequest(
-            address(optimismCreatedAccount),
+        emit SignetActionRequest(
+            address(mainnetCreatedAccount),
             _getUserOpWithSignature()
         );
         _sendUserOperation(_getUserOpWithSignature());
-        assertTrue(optimismCreatedAccount.isOwnerAddress(newOwner));
+        assertTrue(mainnetCreatedAccount.isOwnerAddress(newOwner));
     }
 
     function _sendUserOperation(UserOperation memory userOp) internal override {
@@ -157,7 +158,7 @@ contract TestExecuteCrossChainWithPaymasterOptimism is
         returns (UserOperation memory userOp)
     {
         userOp = UserOperation({
-            sender: address(optimismCreatedAccount),
+            sender: address(mainnetCreatedAccount),
             nonce: userOpNonce,
             initCode: "",
             callData: userOpCalldata,
@@ -166,7 +167,7 @@ contract TestExecuteCrossChainWithPaymasterOptimism is
             preVerificationGas: uint256(100_000),
             maxFeePerGas: uint256(0),
             maxPriorityFeePerGas: uint256(0),
-            paymasterAndData: optimismUserOpPaymasterAndData,
+            paymasterAndData: mainnetUserOpPaymasterAndData,
             signature: ""
         });
     }
@@ -184,7 +185,7 @@ contract TestExecuteCrossChainWithPaymasterOptimism is
     function _sign(
         UserOperation memory userOp
     ) internal view override returns (bytes memory signature) {
-        bytes32 toSign = optimismCreatedAccount.getUserOpHashWithoutChainId(
+        bytes32 toSign = mainnetCreatedAccount.getUserOpHashWithoutChainId(
             userOp
         );
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, toSign);

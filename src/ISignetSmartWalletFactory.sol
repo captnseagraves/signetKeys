@@ -3,7 +3,10 @@ pragma solidity ^0.8.4;
 
 import {CoinbaseSmartWallet} from "./CoinbaseSmartWallet.sol";
 
-interface ICoinbaseSmartWalletFactory {
+// @dev This is a generalized interface for smart wallet factories.
+//      It does require a createAccount function from factories and will update with new supported wallets in the future.
+
+interface ISignetSmartWalletFactory {
     function createAccount(
         bytes[] calldata owners,
         uint256 nonce
@@ -13,6 +16,4 @@ interface ICoinbaseSmartWalletFactory {
         bytes[] calldata owners,
         uint256 nonce
     ) external view returns (address);
-
-    function implementation() external view returns (address);
 }

@@ -3,14 +3,14 @@ pragma solidity ^0.8.0;
 
 import "../CoinbaseSmartWallet/SmartWalletTestBase.sol";
 
-import "../../src/KeyServiceEmitter.sol";
-import "../../src/KeyServicePaymaster.sol";
+import "../../src/SignetEmitter.sol";
+import "../../src/SignetPaymaster.sol";
 import {CoinbaseSmartWalletFactory} from "../../src/CoinbaseSmartWalletFactory.sol";
 
 import {console} from "forge-std/console.sol";
 
-contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
-    KeyServicePaymaster public paymaster;
+contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
+    SignetPaymaster public paymaster;
     CoinbaseSmartWalletFactory factory;
     CoinbaseSmartWallet implementationAccount;
     CoinbaseSmartWallet createdAccount;
@@ -24,7 +24,7 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
         factory = new CoinbaseSmartWalletFactory(
             address(implementationAccount)
         );
-        paymaster = new KeyServicePaymaster(entryPoint, signer);
+        paymaster = new SignetPaymaster(entryPoint, signer);
         createdAccount = factory.createAccount(owners, 0);
 
         userOpNonce = account.REPLAYABLE_NONCE_KEY() << 64;
@@ -57,7 +57,7 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, KeyServiceEmitter {
         );
 
         vm.expectEmit(true, true, false, false);
-        emit KeyServiceActionRequest(
+        emit SignetActionRequest(
             address(createdAccount),
             _getUserOpWithSignature()
         );

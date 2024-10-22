@@ -10,6 +10,8 @@ import "../../src/CoinbaseSmartWallet.sol";
 import {MockCoinbaseSmartWallet} from "../mocks/MockCoinbaseSmartWallet.sol";
 import {Static} from "./Static.sol";
 
+import "../../src/SignetEmitter.sol";
+
 contract SmartWalletTestBase is Test {
     CoinbaseSmartWallet public account;
     uint256 signerPrivateKey = 0xa11ce;
@@ -39,9 +41,14 @@ contract SmartWalletTestBase is Test {
             Static.ENTRY_POINT_BYTES
         );
 
+        SignetEmitter signetEmitter = new SignetEmitter();
+
+        console.log("signetEmitter", address(signetEmitter));
+        console.logBytes(address(signetEmitter).code);
+
         vm.etch(
             0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
-            Static.KEY_SERVICE_EMITTER_BYTES
+            Static.SIGNET_EMITTER_BYTES
         );
 
         account = new MockCoinbaseSmartWallet();
