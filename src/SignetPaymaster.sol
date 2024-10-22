@@ -4,13 +4,14 @@ pragma solidity 0.8.23;
 import {BasePaymaster} from "account-abstraction/core/BasePaymaster.sol";
 import {UserOperation, UserOperationLib} from "account-abstraction/interfaces/UserOperation.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
-import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
+import {MultiOwnable} from "./MultiOwnable.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+
+import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
 
 import {ISignetEmitter} from "./ISignetEmitter.sol";
 import {ISignetSmartWalletFactory} from "./ISignetSmartWalletFactory.sol";
 import {ISignetSmartWallet} from "./ISignetSmartWallet.sol";
-import {MultiOwnable} from "./MultiOwnable.sol";
 
 import {console} from "forge-std/console.sol";
 
@@ -77,8 +78,6 @@ contract SignetPaymaster is BasePaymaster {
         bytes[] memory calls = abi.decode(userOp.callData[4:], (bytes[]));
 
         canExecuteViaPaymaster(calls);
-
-        // create ISignetSmartWallet interface so these functions can be generalized
 
         address factoryAddress = ISignetSmartWallet(userOp.sender)
             .deploymentFactoryAddress();

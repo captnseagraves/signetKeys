@@ -32,12 +32,25 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
         vm.startPrank(signer);
         paymaster.addFactory(address(factory));
         vm.stopPrank();
+
         userOpPaymasterAndData = abi.encodePacked(address(paymaster));
 
         vm.deal(signer, 1 ether);
     }
 
-    //the first goal for this test is to just get the log in the paymaster to fire
+    function test_paymaster_addFactory() public {
+        assertTrue(paymaster.validFactories(address(factory)));
+    }
+
+    function test_paymaster_removeFactory() public {
+        assertTrue(paymaster.validFactories(address(factory)));
+
+        vm.startPrank(signer);
+        paymaster.removeFactory(address(factory));
+        vm.stopPrank();
+
+        assertFalse(paymaster.validFactories(address(factory)));
+    }
 
     function test_succeeds_withPaymaster_whenSelectorAllowed() public {
         // fund the paymaster
@@ -65,9 +78,6 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(createdAccount.isOwnerAddress(newOwner));
     }
-
-    // the case I want to test here is ithe calldata being provided with executeWithoutChainIdValidation
-    // but not with a valid funciton selector.
 
     function test_paymaster_reverts_whenSelectorNotApproved() public {
         bytes4 selector = CoinbaseSmartWallet.execute.selector;
@@ -97,26 +107,40 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
         entryPoint.handleOps(ops, payable(bundler));
     }
 
-    function test_paymaster_addFactory() public {
+    function test_revert_withPaymaster_whenFactoryNotValid() public {
+        // fund the paymaster
         vm.startPrank(signer);
-        paymaster.addFactory(address(factory));
+        paymaster.deposit{value: 1 ether}();
         vm.stopPrank();
 
-        assertTrue(paymaster.validFactories(address(factory)));
-    }
+        bytes4 selector = MultiOwnable.addOwnerAddress.selector;
+        assertTrue(createdAccount.canSkipChainIdValidation(selector));
+        address newOwner = address(6);
+        assertFalse(createdAccount.isOwnerAddress(newOwner));
 
-    function test_paymaster_removeFactory() public {
-        vm.startPrank(signer);
-        paymaster.addFactory(address(factory));
-        vm.stopPrank();
-
-        assertTrue(paymaster.validFactories(address(factory)));
+        calls.push(abi.encodeWithSelector(selector, newOwner));
+        userOpCalldata = abi.encodeWithSelector(
+            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
+            calls
+        );
 
         vm.startPrank(signer);
         paymaster.removeFactory(address(factory));
         vm.stopPrank();
 
-        assertFalse(paymaster.validFactories(address(factory)));
+        UserOperation memory executionUserOp = _getUserOpWithSignature();
+        UserOperation[] memory ops = new UserOperation[](1);
+        ops[0] = executionUserOp;
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEntryPoint.FailedOp.selector,
+                0,
+                "AA33 reverted (or OOG)"
+            )
+        );
+
+        entryPoint.handleOps(ops, payable(bundler));
     }
 
     function _getUserOp()
