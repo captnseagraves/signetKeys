@@ -97,6 +97,28 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
         entryPoint.handleOps(ops, payable(bundler));
     }
 
+    function test_paymaster_addFactory() public {
+        vm.startPrank(signer);
+        paymaster.addFactory(address(factory));
+        vm.stopPrank();
+
+        assertTrue(paymaster.validFactories(address(factory)));
+    }
+
+    function test_paymaster_removeFactory() public {
+        vm.startPrank(signer);
+        paymaster.addFactory(address(factory));
+        vm.stopPrank();
+
+        assertTrue(paymaster.validFactories(address(factory)));
+
+        vm.startPrank(signer);
+        paymaster.removeFactory(address(factory));
+        vm.stopPrank();
+
+        assertFalse(paymaster.validFactories(address(factory)));
+    }
+
     function _getUserOp()
         internal
         view

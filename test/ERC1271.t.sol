@@ -10,6 +10,8 @@ import "../src/ERC1271.sol";
 
 import {MockCoinbaseSmartWallet} from "./mocks/MockCoinbaseSmartWallet.sol";
 
+import {console} from "forge-std/console.sol";
+
 contract ERC1271Test is Test {
     CoinbaseSmartWalletFactory factory;
     CoinbaseSmartWallet account;
@@ -63,12 +65,13 @@ contract ERC1271Test is Test {
         CoinbaseSmartWallet a = new MockCoinbaseSmartWallet();
         vm.etch(0x2Af621c1B01466256393EBA6BF183Ac2962fd98C, address(a).code);
         a.initialize(address(this), owners, 0);
-        bytes32 expected = 0x1b03b7e3bddbb2f9b5080f154cf33fcbed9b9cd42c98409fb0730369426a0a69;
+        bytes32 expected = 0xd91593c25a143b830de6601b43e9eef38279161f8f0e2e614241e57e70790591;
         bytes32 actual = CoinbaseSmartWallet(
             payable(0x2Af621c1B01466256393EBA6BF183Ac2962fd98C)
         ).replaySafeHash(
                 0x9ef3f7124243b092c883252302a74d4ed968efc9f612396f1a82bbeef8931328
             );
+
         assertEq(expected, actual);
     }
 }

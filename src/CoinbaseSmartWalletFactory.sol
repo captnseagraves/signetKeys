@@ -53,12 +53,9 @@ contract CoinbaseSmartWalletFactory {
                 _getSalt(owners, nonce)
             );
 
-        console.log("account address", accountAddress);
-
         account = CoinbaseSmartWallet(payable(accountAddress));
 
         if (!alreadyDeployed) {
-            console.log("initializing factory", address(this));
             account.initialize(address(this), owners, nonce);
         }
     }

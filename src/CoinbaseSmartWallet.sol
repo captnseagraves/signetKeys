@@ -66,10 +66,6 @@ contract CoinbaseSmartWallet is
     bytes[] public deploymentOwners = new bytes[](0);
     uint256 public deploymentNonce = 0;
 
-    function getDeploymentOwners() public view returns (bytes[] memory) {
-        return deploymentOwners;
-    }
-
     /// @notice Thrown when `initialize` is called but the account already has had at least one owner.
     error Initialized();
 
@@ -295,6 +291,19 @@ contract CoinbaseSmartWallet is
         return 0x117DA503d0C065A99C9cc640d963Bbd7081A0beb;
     }
 
+    /// @notice Retrieves the initial owners set during the deployment of this smart wallet
+    ///
+    /// @dev This function returns the array of owners that was passed to the `initialize` function
+    ///      when the smart wallet was first deployed. It does not reflect any changes made to
+    ///      the owners after deployment.
+    ///
+    /// @return An array of bytes, where each element represents an owner
+    ///         Each owner is either an Ethereum address (20 bytes with 12 leading zero bytes)
+    ///         or a 64-byte public key
+    function getDeploymentOwners() public view returns (bytes[] memory) {
+        return deploymentOwners;
+    }
+
     /// @notice Computes the hash of the `UserOperation` in the same way as EntryPoint v0.6, but
     ///         leaves out the chain ID.
     ///
@@ -431,6 +440,6 @@ contract CoinbaseSmartWallet is
         override(ERC1271)
         returns (string memory, string memory)
     {
-        return ("Coinbase Smart Wallet", "1");
+        return ("Coinbase Smart Wallet", "1.1");
     }
 }

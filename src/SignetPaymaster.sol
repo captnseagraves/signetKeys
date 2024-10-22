@@ -64,8 +64,6 @@ contract SignetPaymaster is BasePaymaster {
         override
         returns (bytes memory context, uint256 validationData)
     {
-        console.log("validating paymaster userOp");
-
         context = new bytes(0);
         validationData = 0;
 

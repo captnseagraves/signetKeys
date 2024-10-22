@@ -41,11 +41,6 @@ contract SmartWalletTestBase is Test {
             Static.ENTRY_POINT_BYTES
         );
 
-        SignetEmitter signetEmitter = new SignetEmitter();
-
-        console.log("signetEmitter", address(signetEmitter));
-        console.logBytes(address(signetEmitter).code);
-
         vm.etch(
             0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
             Static.SIGNET_EMITTER_BYTES
@@ -56,8 +51,6 @@ contract SmartWalletTestBase is Test {
         owners.push(passkeyOwner);
         account.initialize(address(this), owners, 0);
         bytecode = address(account).code;
-
-        console.log("anvil deployed account", address(account));
     }
 
     function _sendUserOperation(UserOperation memory userOp) internal virtual {
