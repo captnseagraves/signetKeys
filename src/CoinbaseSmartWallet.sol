@@ -14,8 +14,6 @@ import {MultiOwnable} from "./MultiOwnable.sol";
 
 import {ISignetEmitter} from "./ISignetEmitter.sol";
 
-import {console} from "forge-std/console.sol";
-
 /// @title Coinbase Smart Wallet
 ///
 /// @notice ERC-4337-compatible smart account, based on Solady's ERC4337 account implementation

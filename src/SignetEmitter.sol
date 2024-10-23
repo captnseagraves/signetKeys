@@ -5,7 +5,6 @@ import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 
 import {ISignetEmitter} from "./ISignetEmitter.sol";
 
-import {console} from "forge-std/console.sol";
 // TODO: add ownable and upgradable
 // TODO: comments and clean up
 

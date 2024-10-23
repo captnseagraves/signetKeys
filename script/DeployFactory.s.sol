@@ -8,7 +8,7 @@ import {CoinbaseSmartWallet, CoinbaseSmartWalletFactory} from "../src/CoinbaseSm
 
 contract DeployFactoryScript is Script {
     address constant EXPECTED_IMPLEMENTATION =
-        0x355cb1524266DAa444453A69611768aA3472b78F;
+        0x8C8218c6D27eB9d02C48CCEfc2C5e0764db8157B;
     // we lose the 0BASED0 address, sad.
     // could find new salt that enables another based factory address
     address constant EXPECTED_FACTORY =

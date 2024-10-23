@@ -13,7 +13,6 @@ import {ISignetEmitter} from "./ISignetEmitter.sol";
 import {ISignetSmartWalletFactory} from "./ISignetSmartWalletFactory.sol";
 import {ISignetSmartWallet} from "./ISignetSmartWallet.sol";
 
-import {console} from "forge-std/console.sol";
 
 contract SignetPaymaster is BasePaymaster {
     mapping(address => bool) public validFactories;

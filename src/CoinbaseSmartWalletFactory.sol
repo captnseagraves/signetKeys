@@ -4,8 +4,6 @@ pragma solidity ^0.8.4;
 import {CoinbaseSmartWallet} from "./CoinbaseSmartWallet.sol";
 import {LibClone} from "solady/utils/LibClone.sol";
 
-import "forge-std/console.sol";
-
 /// @title Coinbase Smart Wallet Factory
 ///
 /// @notice CoinbaseSmartWallet factory, based on Solady's ERC4337Factory.
