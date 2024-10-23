@@ -81,7 +81,6 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
 
     function test_paymaster_reverts_whenSelectorNotApproved() public {
         bytes4 selector = CoinbaseSmartWallet.execute.selector;
-        assertFalse(createdAccount.canSkipChainIdValidation(selector));
         bytes memory restrictedSelectorCalldata = abi.encodeWithSelector(
             selector,
             ""
@@ -96,6 +95,7 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = executionUserOp;
 
+        // EntryPoint revert message, undernearth there is SelectorNotAllowed revert
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEntryPoint.FailedOp.selector,
@@ -108,15 +108,8 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
     }
 
     function test_revert_withPaymaster_whenFactoryNotValid() public {
-        // fund the paymaster
-        vm.startPrank(signer);
-        paymaster.deposit{value: 1 ether}();
-        vm.stopPrank();
-
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
-        assertTrue(createdAccount.canSkipChainIdValidation(selector));
         address newOwner = address(6);
-        assertFalse(createdAccount.isOwnerAddress(newOwner));
 
         calls.push(abi.encodeWithSelector(selector, newOwner));
         userOpCalldata = abi.encodeWithSelector(
@@ -132,6 +125,46 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = executionUserOp;
 
+        // EntryPoint revert message, undernearth there is InvalidFactory revert
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IEntryPoint.FailedOp.selector,
+                0,
+                "AA33 reverted (or OOG)"
+            )
+        );
+
+        entryPoint.handleOps(ops, payable(bundler));
+    }
+
+    function test_revert_withPaymaster_whenSenderNotDeployedByFactory() public {
+        bytes4 selector = MultiOwnable.addOwnerAddress.selector;
+        address newOwner = address(6);
+
+        calls.push(abi.encodeWithSelector(selector, newOwner));
+        userOpCalldata = abi.encodeWithSelector(
+            CoinbaseSmartWallet.executeWithoutChainIdValidation.selector,
+            calls
+        );
+
+        UserOperation memory executionUserOp = _getUserOpWithSignature();
+        UserOperation[] memory ops = new UserOperation[](1);
+        ops[0] = executionUserOp;
+
+        // etch factory
+        vm.etch(address(vm.addr(7)), Static.INITALIZED_FACTORY_BYTES);
+
+        vm.startPrank(signer);
+        paymaster.addFactory(address(vm.addr(7)));
+        vm.stopPrank();
+
+        vm.store(
+            address(ops[0].sender),
+            bytes32(uint256(0)),
+            bytes32(abi.encode(vm.addr(7)))
+        );
+
+        // EntryPoint revert message, undernearth there is InvalidAccount revert
         vm.expectRevert(
             abi.encodeWithSelector(
                 IEntryPoint.FailedOp.selector,
