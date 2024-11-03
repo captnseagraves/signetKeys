@@ -8,7 +8,7 @@ import {SignetEmitter} from "../src/SignetEmitter.sol";
 
 contract DeploySignetEmitterScript is Script {
     address constant EXPECTED_EMITTER_IMPLEMENTATION =
-        0x117DA503d0C065A99C9cc640d963Bbd7081A0beb;
+        0x4DE3Fbb6dF50A7e6dBEEF948dFFC1E38bECeB72C;
 
     function run() external {
         console2.log("Deploying on chain ID", block.chainid);
@@ -22,3 +22,6 @@ contract DeploySignetEmitterScript is Script {
 }
 
 // forge script script/DeploySignetEmitter.s.sol:DeploySignetEmitterScript --rpc-url $OPTIMISM_SEPOLIA_RPC_URL --private-key $OPTIMISM_SEPOLIA_PRIVATE_KEY --slow --broadcast --chain-id 11155420 --etherscan-api-key $OPTIMISM_ETHERSCAN_API_KEY --verify
+
+// 102424 contracts deployed to optimism sepolia
+// https://sepolia-optimism.etherscan.io/address/0x4DE3Fbb6dF50A7e6dBEEF948dFFC1E38bECeB72C

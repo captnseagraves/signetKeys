@@ -3,16 +3,15 @@ pragma solidity 0.8.23;
 
 import {BasePaymaster} from "account-abstraction/core/BasePaymaster.sol";
 import {UserOperation, UserOperationLib} from "account-abstraction/interfaces/UserOperation.sol";
-import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
-import {MultiOwnable} from "./MultiOwnable.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
 import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
+
+import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {MultiOwnable} from "./MultiOwnable.sol";
 
 import {ISignetEmitter} from "./ISignetEmitter.sol";
 import {ISignetSmartWalletFactory} from "./ISignetSmartWalletFactory.sol";
 import {ISignetSmartWallet} from "./ISignetSmartWallet.sol";
-
 
 contract SignetPaymaster is BasePaymaster {
     mapping(address => bool) public validFactories;
@@ -53,7 +52,6 @@ contract SignetPaymaster is BasePaymaster {
 
     /// @dev Validates that the userOp is for a valid function selector and that the sender is a valid wallet
     ///      deployed by a valid factory.
-    ///      This function can be generalized in the future for extensbility to other smart wallet clients.
     function _validatePaymasterUserOp(
         UserOperation calldata userOp,
         bytes32,

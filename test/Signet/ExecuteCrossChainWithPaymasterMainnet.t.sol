@@ -9,6 +9,8 @@ import "../../src/CoinbaseSmartWalletFactory.sol";
 import "../../src/CoinbaseSmartWallet.sol";
 import "../../src/ISignetSmartWallet.sol";
 
+import {EntryPoint} from "lib/account-abstraction/contracts/core/EntryPoint.sol";
+
 import {console} from "forge-std/console.sol";
 
 /// @dev this is a sister test to ExecuteCrossChainWithPaymasterOptimism.t.sol.
@@ -24,6 +26,8 @@ contract TestExecuteCrossChainWithoutPaymaster is
     CoinbaseSmartWallet public mainnetCreatedAccount;
     CoinbaseSmartWallet public mainnetImplementationReferenceAccount;
 
+    EntryPoint public newEntryPoint;
+
     uint256 mainnetFork;
 
     bytes[] calls;
@@ -32,6 +36,11 @@ contract TestExecuteCrossChainWithoutPaymaster is
 
     function setUp() public override {
         super.setUp();
+
+        // newEntryPoint = new EntryPoint();
+
+        // console2.log("newEntryPoint", address(newEntryPoint));
+        // console2.logBytes(address(newEntryPoint).code);
 
         // setup mainnet fork
         mainnetFork = vm.createSelectFork(vm.envString("MAINNET_RPC_URL"));
@@ -42,7 +51,7 @@ contract TestExecuteCrossChainWithoutPaymaster is
 
         // etch key service emitter
         vm.etch(
-            0x117DA503d0C065A99C9cc640d963Bbd7081A0beb,
+            0x4DE3Fbb6dF50A7e6dBEEF948dFFC1E38bECeB72C,
             Static.SIGNET_EMITTER_BYTES
         );
 
@@ -136,6 +145,19 @@ contract TestExecuteCrossChainWithoutPaymaster is
             ISignetSmartWallet.executeWithoutChainIdValidation.selector,
             calls
         );
+
+        (, address msgSender, address txOrigin) = vm.readCallers();
+        console2.log("msgSender", msgSender);
+        console2.log("txOrigin", txOrigin);
+
+        uint256 senderBalanceBefore = address(msg.sender).balance;
+        console2.log("senderBalanceBefore", senderBalanceBefore);
+
+        uint256 balanceBefore = entryPoint.balanceOf(address(mainnetPaymaster));
+        console2.log("balanceBefore", balanceBefore);
+
+        uint256 gas_start = gasleft();
+
         vm.expectEmit(true, true, false, false);
         emit SignetActionRequest(
             address(mainnetCreatedAccount),
@@ -143,6 +165,23 @@ contract TestExecuteCrossChainWithoutPaymaster is
         );
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(mainnetCreatedAccount.isOwnerAddress(newOwner));
+
+        uint256 gas_used = gas_start - gasleft();
+        console2.log("gas_used", gas_used);
+        console.log("msg.sender", msg.sender);
+        console.log("address(this)", address(this));
+
+        uint256 senderBalanceAfter = address(msg.sender).balance;
+        console2.log("senderBalanceAfter", senderBalanceAfter);
+
+        uint256 balanceAfter = entryPoint.balanceOf(address(mainnetPaymaster));
+        console2.log("balanceAfter", balanceAfter);
+
+        require(balanceAfter < balanceBefore, "Balance did not decrease");
+        require(
+            senderBalanceAfter == senderBalanceBefore,
+            "Sender balance changed"
+        );
     }
 
     function _sendUserOperation(UserOperation memory userOp) internal override {
@@ -165,8 +204,8 @@ contract TestExecuteCrossChainWithoutPaymaster is
             callGasLimit: uint256(2_000_000),
             verificationGasLimit: uint256(2_000_000),
             preVerificationGas: uint256(100_000),
-            maxFeePerGas: uint256(0),
-            maxPriorityFeePerGas: uint256(0),
+            maxFeePerGas: uint256(100_000),
+            maxPriorityFeePerGas: uint256(100_000),
             paymasterAndData: mainnetUserOpPaymasterAndData,
             signature: ""
         });

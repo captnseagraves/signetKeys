@@ -15,10 +15,17 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
     CoinbaseSmartWallet implementationAccount;
     CoinbaseSmartWallet createdAccount;
 
+    EntryPoint public newEntryPoint;
+
     bytes[] calls;
 
     function setUp() public override {
         super.setUp();
+
+        newEntryPoint = new EntryPoint();
+
+        console2.log("newEntryPoint", address(newEntryPoint));
+        console2.logBytes(address(newEntryPoint).code);
 
         implementationAccount = new CoinbaseSmartWallet();
         factory = new CoinbaseSmartWalletFactory(
@@ -69,6 +76,16 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
             calls
         );
 
+        (, address msgSender, address txOrigin) = vm.readCallers();
+        console2.log("msgSender", msgSender);
+        console2.log("txOrigin", txOrigin);
+
+        uint256 senderBalanceBefore = address(msg.sender).balance;
+        console2.log("senderBalanceBefore", senderBalanceBefore);
+
+        uint256 balanceBefore = entryPoint.balanceOf(address(paymaster));
+        console2.log("balanceBefore", balanceBefore);
+
         vm.expectEmit(true, true, false, false);
         emit SignetActionRequest(
             address(createdAccount),
@@ -77,6 +94,21 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
 
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(createdAccount.isOwnerAddress(newOwner));
+
+        console.log("msg.sender", msg.sender);
+        console.log("address(this)", address(this));
+
+        uint256 senderBalanceAfter = address(msg.sender).balance;
+        console2.log("senderBalanceAfter", senderBalanceAfter);
+
+        uint256 balanceAfter = entryPoint.balanceOf(address(paymaster));
+        console2.log("balanceAfter", balanceAfter);
+
+        require(balanceAfter < balanceBefore, "Balance did not decrease");
+        require(
+            senderBalanceAfter == senderBalanceBefore,
+            "Sender balance changed"
+        );
     }
 
     function test_paymaster_reverts_whenSelectorNotApproved() public {
@@ -189,9 +221,9 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
             callData: userOpCalldata,
             callGasLimit: uint256(2_000_000),
             verificationGasLimit: uint256(2_000_000),
-            preVerificationGas: uint256(100_000),
-            maxFeePerGas: uint256(0),
-            maxPriorityFeePerGas: uint256(0),
+            preVerificationGas: uint256(2_000_000),
+            maxFeePerGas: uint256(1),
+            maxPriorityFeePerGas: uint256(1),
             paymasterAndData: userOpPaymasterAndData,
             signature: ""
         });

@@ -286,7 +286,7 @@ contract CoinbaseSmartWallet is
     ///
     /// @return The address of the SignetEmitter v0.1
     function signetEmitter() public view virtual returns (address) {
-        return 0x117DA503d0C065A99C9cc640d963Bbd7081A0beb;
+        return 0x4DE3Fbb6dF50A7e6dBEEF948dFFC1E38bECeB72C;
     }
 
     /// @notice Retrieves the initial owners set during the deployment of this smart wallet
