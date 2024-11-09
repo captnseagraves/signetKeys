@@ -146,17 +146,8 @@ contract TestExecuteCrossChainWithoutPaymaster is
             calls
         );
 
-        (, address msgSender, address txOrigin) = vm.readCallers();
-        console2.log("msgSender", msgSender);
-        console2.log("txOrigin", txOrigin);
-
         uint256 senderBalanceBefore = address(msg.sender).balance;
-        console2.log("senderBalanceBefore", senderBalanceBefore);
-
         uint256 balanceBefore = entryPoint.balanceOf(address(mainnetPaymaster));
-        console2.log("balanceBefore", balanceBefore);
-
-        uint256 gas_start = gasleft();
 
         vm.expectEmit(true, true, false, false);
         emit SignetActionRequest(
@@ -166,16 +157,8 @@ contract TestExecuteCrossChainWithoutPaymaster is
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(mainnetCreatedAccount.isOwnerAddress(newOwner));
 
-        uint256 gas_used = gas_start - gasleft();
-        console2.log("gas_used", gas_used);
-        console.log("msg.sender", msg.sender);
-        console.log("address(this)", address(this));
-
         uint256 senderBalanceAfter = address(msg.sender).balance;
-        console2.log("senderBalanceAfter", senderBalanceAfter);
-
         uint256 balanceAfter = entryPoint.balanceOf(address(mainnetPaymaster));
-        console2.log("balanceAfter", balanceAfter);
 
         require(balanceAfter < balanceBefore, "Balance did not decrease");
         require(
