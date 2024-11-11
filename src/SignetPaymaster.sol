@@ -6,14 +6,16 @@ import {UserOperation, UserOperationLib} from "account-abstraction/interfaces/Us
 import {IEntryPoint} from "account-abstraction/interfaces/IEntryPoint.sol";
 
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
-import {Ownable} from "@openzeppelin/contracts/access/OwnableUpgradeable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {MultiOwnable} from "./MultiOwnable.sol";
 
 import {ISignetEmitter} from "./ISignetEmitter.sol";
 import {ISignetSmartWalletFactory} from "./ISignetSmartWalletFactory.sol";
 import {ISignetSmartWallet} from "./ISignetSmartWallet.sol";
 
-contract SignetPaymaster is BasePaymaster, UUPSUpgradeable {
+// @dev This paymaster is not upgradable at this time as the inherited BasePaymaster is not upgradable.
+
+contract SignetPaymaster is BasePaymaster {
     mapping(address => bool) public validFactories;
 
     /// @notice Thrown when a call is passed to `executeWithoutChainIdValidation` that is not allowed by
@@ -34,7 +36,7 @@ contract SignetPaymaster is BasePaymaster, UUPSUpgradeable {
     constructor(
         IEntryPoint entryPoint,
         address initialOwner
-    ) BasePaymaster(entryPoint) OwnableUpgradeable(initialOwner) {
+    ) BasePaymaster(entryPoint) Ownable(initialOwner) {
         if (address(entryPoint).code.length == 0) {
             revert InvalidEntryPoint();
         }

@@ -76,8 +76,6 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
             calls
         );
 
-        (, address msgSender, address txOrigin) = vm.readCallers();
-
         uint256 senderBalanceBefore = address(msg.sender).balance;
         uint256 balanceBefore = entryPoint.balanceOf(address(paymaster));
 
@@ -101,6 +99,11 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
     }
 
     function test_paymaster_reverts_whenSelectorNotApproved() public {
+        // fund the paymaster
+        vm.startPrank(signer);
+        paymaster.deposit{value: 1 ether}();
+        vm.stopPrank();
+
         bytes4 selector = CoinbaseSmartWallet.execute.selector;
         bytes memory restrictedSelectorCalldata = abi.encodeWithSelector(
             selector,
@@ -129,6 +132,11 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
     }
 
     function test_revert_withPaymaster_whenFactoryNotValid() public {
+        // fund the paymaster
+        vm.startPrank(signer);
+        paymaster.deposit{value: 1 ether}();
+        vm.stopPrank();
+
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
         address newOwner = address(6);
 
@@ -159,6 +167,11 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
     }
 
     function test_revert_withPaymaster_whenSenderNotDeployedByFactory() public {
+        // fund the paymaster
+        vm.startPrank(signer);
+        paymaster.deposit{value: 1 ether}();
+        vm.stopPrank();
+
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
         address newOwner = address(6);
 

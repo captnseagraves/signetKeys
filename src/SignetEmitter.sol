@@ -3,7 +3,7 @@ pragma solidity 0.8.23;
 
 import {UserOperation} from "account-abstraction/interfaces/UserOperation.sol";
 import {UUPSUpgradeable} from "solady/utils/UUPSUpgradeable.sol";
-import {Ownable} from "@openzeppelin/contracts/access/OwnableUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 
 import {ISignetEmitter} from "./ISignetEmitter.sol";
 
@@ -11,12 +11,16 @@ import {ISignetEmitter} from "./ISignetEmitter.sol";
 // TODO: comments and clean up
 
 contract SignetEmitter is ISignetEmitter, UUPSUpgradeable, OwnableUpgradeable {
-    // constructor() Ownable(initialOwner) {
-    //     OwnableUpgradeable.__Ownable_init();
-    // }
+    constructor() {
+        _disableInitializers();
+    }
 
-    function initialize(address initialOwner) {
-        OwnableUpgradeable.__Ownable_init(initialOwner);
+    function initialize(address initialOwner) public {
+        require(
+            initialOwner != address(0),
+            "Initial owner cannot be zero address"
+        );
+        __Ownable_init(initialOwner); // Initialize the Ownable contract
     }
 
     function emitActionRequest(
@@ -24,5 +28,18 @@ contract SignetEmitter is ISignetEmitter, UUPSUpgradeable, OwnableUpgradeable {
         UserOperation calldata userOp
     ) external {
         emit SignetActionRequest(sender, userOp);
+    }
+
+    function _authorizeUpgrade(
+        address newImplementation
+    ) internal view override onlyOwner {
+        require(
+            newImplementation != address(0),
+            "New implementation cannot be zero address"
+        );
+        require(
+            newImplementation.code.length > 0,
+            "New implementation must be a contract"
+        );
     }
 }
