@@ -25,9 +25,18 @@ contract SignetEmitter is ISignetEmitter, UUPSUpgradeable, OwnableUpgradeable {
 
     function emitActionRequest(
         address sender,
-        UserOperation calldata userOp
+        UserOperation calldata userOp,
+        address deploymentFactoryAddress,
+        bytes[] memory deploymentOwners,
+        uint256 deploymentNonce
     ) external {
-        emit SignetActionRequest(sender, userOp);
+        emit SignetActionRequest(
+            sender,
+            userOp,
+            deploymentFactoryAddress,
+            deploymentOwners,
+            deploymentNonce
+        );
     }
 
     function _authorizeUpgrade(

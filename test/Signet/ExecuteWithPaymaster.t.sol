@@ -65,6 +65,21 @@ contract TestExecuteWithPaymaster is SmartWalletTestBase, SignetEmitter {
         paymaster.deposit{value: 1 ether}();
         vm.stopPrank();
 
+        console2.log(
+            "deploymentFactoryAddress",
+            createdAccount.deploymentFactoryAddress()
+        );
+
+        bytes[] memory owners = createdAccount.getDeploymentOwners();
+        for (uint i = 0; i < owners.length; i++) {
+            console2.log("Owner", i);
+            console2.logBytes(owners[i]);
+        }
+        console2.log(
+            "deploymentFactoryAddress",
+            createdAccount.deploymentNonce()
+        );
+
         bytes4 selector = MultiOwnable.addOwnerAddress.selector;
         assertTrue(createdAccount.canSkipChainIdValidation(selector));
         address newOwner = address(6);

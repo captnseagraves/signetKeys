@@ -9,8 +9,7 @@ import {CoinbaseSmartWallet, CoinbaseSmartWalletFactory} from "../src/CoinbaseSm
 contract DeployFactoryScript is Script {
     address constant EXPECTED_IMPLEMENTATION =
         0x63B800fAC71E8d0029Ad8BB97F59b67FB5c342DB;
-    // we lose the 0BASED0 address, sad.
-    // could find new salt that enables another based factory address
+
     address constant EXPECTED_FACTORY =
         0xDD21f566b37c6Aaf1Abf024b815d802931D6D3f9;
 
@@ -20,6 +19,7 @@ contract DeployFactoryScript is Script {
             creationCode: type(CoinbaseSmartWallet).creationCode,
             salt: 0x4e9d9f85f1273adf2b094bf2999f6b9876d741a29356dbd81f38207ea6f0e38b
         });
+
         console2.log("implementation", implementation);
         assert(implementation == EXPECTED_IMPLEMENTATION);
         address factory = SafeSingletonDeployer.broadcastDeploy({

@@ -14,25 +14,37 @@ import {ISignetSmartWalletFactory} from "../src/ISignetSmartWalletFactory.sol";
 
 import {MultiOwnable} from "../src/MultiOwnable.sol";
 
-contract DeployWalletScript is Script {
+contract WalletTestScript is Script {
     function run() external {
         vm.startBroadcast();
 
-        console2.log("Deploying on chain ID", block.chainid);
+        console2.log("On chain ID", block.chainid);
+
+        CoinbaseSmartWallet wallet = CoinbaseSmartWallet(
+            payable(0x2cdECc2C3FEA2B68949169d0eFA84D9517d05326)
+        );
+
+        // owners[0] = abi.encode(0xC1200B5147ba1a0348b8462D00d237016945Dfff);
+
+        console2.log("wallet", address(wallet));
+
+        address factoryAddress = wallet.deploymentFactoryAddress();
+        console2.log("factoryAddress", factoryAddress);
+
+        bytes[] memory owners = wallet.getDeploymentOwners();
+        uint256 nonce = wallet.deploymentNonce();
+
+        console2.log("nonce", nonce);
+
+        address owner = abi.decode(owners[0], (address));
+        console2.log("owner", owner);
 
         ISignetSmartWalletFactory factory = ISignetSmartWalletFactory(
             0xDD21f566b37c6Aaf1Abf024b815d802931D6D3f9
         );
 
-        bytes[] memory owners = new bytes[](1);
-        owners[0] = abi.encode(0xC1200B5147ba1a0348b8462D00d237016945Dfff);
-
-        console2.log("owners[0]");
-        console2.logBytes(owners[0]);
-
-        CoinbaseSmartWallet contractInstance = factory.createAccount(owners, 1);
-
-        console2.log("contractInstance", address(contractInstance));
+        address account = factory.getAddress(owners, 0);
+        console2.log("account", account);
 
         vm.stopBroadcast();
     }

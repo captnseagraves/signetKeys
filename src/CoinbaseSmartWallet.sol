@@ -213,7 +213,10 @@ contract CoinbaseSmartWallet is
             if (emitSignetActionRequest) {
                 ISignetEmitter(signetEmitter()).emitActionRequest(
                     userOp.sender,
-                    userOp
+                    userOp,
+                    deploymentFactoryAddress,
+                    deploymentOwners,
+                    deploymentNonce
                 );
             }
             return 0;

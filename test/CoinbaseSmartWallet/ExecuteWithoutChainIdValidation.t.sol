@@ -40,7 +40,7 @@ contract TestExecuteWithoutChainIdValidation is
         );
 
         vm.expectEmit(true, true, false, false);
-        emit SignetActionRequest(address(account), _getUserOpWithSignature());
+        emit SignetActionRequest(address(account), _getUserOpWithSignature(), );
 
         _sendUserOperation(_getUserOpWithSignature());
         assertTrue(account.isOwnerAddress(newOwner));
